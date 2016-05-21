@@ -27,7 +27,7 @@ Na początku chcieliśmy zobaczyć, jak wyglądają znormalizowane dane w zależ
 
 <center>
 ```{r myfile-0-plot, echo = F, results = 'asis'}
-cat('\n![ ](plec2.png)\n')
+cat('\n![ ](../wykresy/plec2.png)\n')
 ``` 
 </center>
 
@@ -37,7 +37,7 @@ Z powyższego wykresu widzimym, że odsetki dla mężczyzn w podziale na wojewó
 <center>
 ```{r myfile-6-plot, echo = F, results = 'asis'}
 # TODO: dodac dobry wykres
-cat('\n![ ](grupy_wiekowe.png)\n')
+cat('\n![ ](../wykresy/grupy_wiekowe.png)\n')
 ``` 
 </center>
 
@@ -46,7 +46,7 @@ Na powyższym wykresie widzimy, że rozkład grup wiekowych w zależności od wo
 ###Faza choroby 
 <center>
 ```{r myfile-7-plot, echo = F, results = 'asis'}
-cat('\n![ ](fazy_woj.png)\n')
+cat('\n![ ](../wykresy/fazy_woj.png)\n')
 ``` 
 </center>
 
@@ -59,7 +59,7 @@ Na poniższym kartogramie widać wyraźny podział zachorowań ze względu na wo
 
 <center>
 ```{r myfile-1-plot, echo = F, results = 'asis'}
-cat('\n![ ](wojewodztwa3.png)\n')
+cat('\n![ ](../wykresy/wojewodztwa3.png)\n')
 ``` 
 </center>
 
@@ -68,14 +68,14 @@ Z kolei gdy zobaczymy na kartogram dla powiatów, nie widzimy już tak wyraźnej
 
 <center>
 ```{r myfile-2-plot, echo = F, results = 'asis'}
-cat('\n![ ](powiaty3.png)\n')
+cat('\n![ ](../wykresy/powiaty3.png)\n')
 ``` 
 </center>
 
 Spójrzmy teraz na 15 powiatów, w których odsetek zachorowań jest największy. Są wśród nich głównie duże miasta przemysłowe.
 <center>
 ```{r myfile-3-plot, echo = F, results = 'asis'}
-cat('\n![ ](powiat_15_max4.png)\n')
+cat('\n![ ](../wykresy/powiat_15_max4.png)\n')
 ``` 
 </center>
 
@@ -89,7 +89,7 @@ W poniższych województwach mamy mały odsetek zachorowań, ale nie ma większe
 na odsetek zachorowań. Największe odsetki zachorowań mają powiaty, które nie są miastami.
 <center>
 ```{r myfile-4-plot, echo = F, results = 'asis'}
-cat('\n![ ](Lubuskie.png) ![](Swietokrzyskie.png)\n')
+cat('\n![ ](../wykresy/Lubuskie.png) ![](../wykresy/Swietokrzyskie.png)\n')
 ``` 
 </center>
 ###Województwa z większym miastem
@@ -97,7 +97,7 @@ W poniższych województwach mamy duży odsetek zachorowań, a stolicami wojewó
 
 <center>
 ```{r myfile-8-plot, echo = F, results = 'asis'}
-cat('\n![ ](Lodzkie.png) ![](Mazowieckie2.png) ![](Pomorskie.png)\n')
+cat('\n![ ](../wykresy/Lodzkie.png) ![](../wykresy/Mazowieckie2.png) ![](../wykresy/Pomorskie.png)\n')
 ``` 
 </center>
 
