@@ -9,10 +9,9 @@ output:
 ---
 
 ##Wprowadzenie
-Dokonaliśmy eksploracji danych zawierających liczbę przypadków raka piersi w Polsce w latach 2010, 2011, 2012 z podziałem na płeć, 6 kategorii wiekowych, faza choroby, kod TERYT/powiat, województwo. Wykorzystaliśmy również dane z GUS, aby pracować jedynie na znormalizowanych danych oraz bazy współrzędnych geograficznych z https://github.com/pbiecek/teryt, by wykreślić mapy Polski.
+Dokonaliśmy eksploracji danych zawierających liczbę przypadków raka piersi w Polsce w latach 2010, 2011, 2012 z podziałem na płeć, 6 kategorii wiekowych, kod TERYT/powiat, województwo oraz fazę choroby. Wykorzystaliśmy również dane z GUS, aby pracować jedynie na znormalizowanych danych oraz bazy współrzędnych geograficznych z https://github.com/pbiecek/teryt, by wykonać kartogramy.
 
-Dokonując synchronizacji wyjściowych danych z danymi GUS napotkaliśmy dwie rozbieżności. W GUS brak informacji na temat powiatu o kodzie TERYT 1431, stąd pominęliśmy ten powiat w eksploracji oraz w danych wyjściowych brakuje kodu TERYT 0265 (miasto Wałbrzych), który występuje w GUS, 
-zatem włączyliśmy dane GUS o TERYT 0265 do powiatu wałbrzyskiego o kodzie 0221. Ostatecznie rozpatrujemy 379 powiatów.
+Dokonując synchronizacji wyjściowych danych z danymi GUS napotkaliśmy dwie rozbieżności. W GUS brak informacji na temat powiatu o kodzie TERYT 1431, stąd pominęliśmy ten powiat w eksploracji oraz w danych wyjściowych brakuje kodu TERYT 0265 (miasto Wałbrzych), który występuje w GUS - zdecydowaliśmy, że  utożsamimy TERYT 0265 (miasto Wałbrzych) z TERYT 0221 (powiat wałbrzyski).
 
 Na wstępie szukaliśmy poziomów danych interesujących statystycznie i w dalszej części raportu będziemy pracować tylko na tych najbardziej interesujących.
 
@@ -21,86 +20,86 @@ Na wstępie szukaliśmy poziomów danych interesujących statystycznie i w dalsz
 Naszym głównym celem była szeroka eksploracja danych i znalezienie czynników, które wpływają na rozmieszczenie
 raka piersi w całej Polsce.
 
-##Analiza czynników wpływająych na liczbę zachorowań
+##Analiza czynników wpływających na liczbę zachorowań
 
 ###Płeć
+Na początku chcieliśmy zobaczyć, jak wyglądają znormalizowane dane w zależności od płci (liczbę zachorowań w danym województwie podzieliliśmy przez ludność województwa).
 
 <center>
 ```{r myfile-0-plot, echo = F, results = 'asis'}
-cat('\n![ ](plec.png)\n')
+cat('\n![ ](../wykresy/plec.png)\n')
 ``` 
 </center>
 
-Z powyższego wykresu widzimym, że odsetki dla mężczyzn w podziale na województwa są niewielkie i równomiernie rozłożone, czego też mogliśmy się spodziewać patrząc na typ raka. Zatem dalej będziemy pracować z jedną płcią - kobietami.
-
+Z powyższego wykresu widzimym, że odsetki dla mężczyzn w podziale na województwa są niewielkie i równomiernie rozłożone - czego też mogliśmy się spodziewać patrząc na typ raka. Na postawie tego wyniku uznaliśmy, że informacje o zachorowaniach płci męskiej są drugorzędne, zatem dalej będziemy rozważać jedynie populację kobiet (w dalszej części raportu pracujemy na następującej normalizacji danych: liczbę zachorowań kobiet podzieliliśmy przez ludność kobiet w województwie lub powiecie).
 
 ###Grupa wiekowa 
-Na poniższym wykresie widzimy, że rozkład grup wiekowych w zależności od województwa jest zbliżony w obrębie całej Polski. Najwięcej osób choruje w średnim wieku - między 55 a 64 lat.
-
 <center>
 ```{r myfile-6-plot, echo = F, results = 'asis'}
 # TODO: dodac dobry wykres
-cat('\n![ ](grupy_wiekowe.png)\n')
+cat('\n![ ](../wykresy/grupy_wiekowe.png)\n')
 ``` 
 </center>
-###Faza choroby 
-Na poniższym wykresie widzimy, że również rozkład różnych faz choroby w zależności od województwa jest zbliżony w obrębie całej Polski. Najwięcej wykrywa się w w 2 fazie.
 
+Na powyższym wykresie widzimy, że rozkład grup wiekowych w zależności od województwa jest zbliżony w obrębie całej Polski. Najwięcej kobiet choruje w średnim wieku - między 55, a 64 lat.
+
+###Faza choroby 
 <center>
 ```{r myfile-7-plot, echo = F, results = 'asis'}
-cat('\n![ ](fazy_woj.png)\n')
+cat('\n![ ](../wykresy/fazy_woj.png)\n')
 ``` 
 </center>
-Pokazaliśmy, że rozkład grup wiekowych i faz nie jest istonie ważny ze względu na kryteria geograficzne
-i jest zbliżony w obrębie całej Polski. Dalej będziemy pracować na danych zsumowanych zarówno względem faz i wieku. 
+
+Na powyższym wykresie widzimy, że również rozkład różnych faz choroby w zależności od województwa jest zbliżony w obrębie całej Polski (chociaż wyróżniają się trzy województwa: w dolnośląskim widzimy większy procent zachorowań na fazę 1, a w zachodniopomorskim oraz opolskim na fazę 2). Najwięcej zachorowań wykrywa się w drugiej fazie choroby. 
+
+Pokazaliśmy, że rozkład grup wiekowych i faz nie jest istonie ważny ze względu na kryteria geograficzne, i jest zbliżony w obrębie całej Polski. Zatem dalej będziemy pracować na danych zsumowanych zarówno względem wieku i faz. 
 
 ###Województwo
-Na poniższej mapce widać, wyraźny podział zachorowań z względu na województwa. Widzimy wyraźną dysproporcję między np sąsiadującymi województwami Świętokrzyskim i Łódzkim.
+Na poniższym kartogramie widać wyraźny podział zachorowań ze względu na województwa, istnieje podział: Polska środkowa wraz z północnym zachodem versus południowy wschód. Największy odsetek zachorowań posiada województwo łódzkie oraz zachodnio-pomorskie, a najmniejszy podkarpackie.
 
 <center>
 ```{r myfile-1-plot, echo = F, results = 'asis'}
-cat('\n![ ](wojewodztwa.png)\n')
+cat('\n![ ](../wykresy/wojewodztwa.png)\n')
 ``` 
 </center>
 
 ###Powiat
-Gdy jednak zobaczymy na mapkę dla powiatów, nie widzimy już tak wyraźnej różnicy jeśli chodzi o województwa, między np Łódzkim i Świętokrzyskim nie widać wyraźnej dysproporcji na tle powiatów. Widać wyraźnie, że dominującymi powiatami są duże miasta i to one znacząco wpływają na województwo.
+Z kolei gdy zobaczymy na kartogram dla powiatów, nie widzimy już tak wyraźnej różnicy jeśli chodzi o województwa. Jednak widać wyraźnie, że dominującymi powiatami są duże miasta i to one znacząco wpływają na województwo.
 
 <center>
 ```{r myfile-2-plot, echo = F, results = 'asis'}
-cat('\n![ ](powiaty.png)\n')
+cat('\n![ ](../wykresy/powiaty.png)\n')
 ``` 
 </center>
 
 Spójrzmy teraz na 15 powiatów, w których odsetek zachorowań jest największy. Są wśród nich głównie duże miasta przemysłowe.
 <center>
 ```{r myfile-3-plot, echo = F, results = 'asis'}
-cat('\n![ ](powiat_15_max.png)\n')
+cat('\n![ ](../wykresy/powiat_15_max.png)\n')
 ``` 
 </center>
 
+Są to następujące powiaty (w nawiasach wielkość odsetek zachorowań): Sopot (0.00574), Sosnowiec (0.00432), Łódź (0.00428), Częstochowa (0.00416), Świnoujście (0.00413), Konin (0.00410), Wałbrzyski (0.00401), Płock (0.00399), Poznań (0.00394),  Warszawa (0.00390), Włocławek (0.00387), Siemianowice Śląskie (0.00386), kamiennogórski (0.00386), Gdańsk (0.00385), Szczecin (0.00385).
+
 ##Analiza rozkładu zachorowań powiatów względem województw
-Z powyższych mapek widzimy, że dominujący wpływ na odsetek zachorowań w danym województwie mają duże miasta (głównie przemysłowe). Przyjrzeliśmy się jak wygląda rozkład odsetka zachorowań w powiatach w każdym województwie. I tu wyrózniliśmy dwie grupy - województwa nie posiadające dużego miasta przemysłowego - jak Świętokrzyskie czy Lubuskie, gdzie nie było wyraźnego dominatora, jak i województwa z wyraźnym dominatorem - miastem, które wybijało się ponad inne powiaty.
+Z powyższych kartogramów widzimy, że dominujący wpływ na odsetek zachorowań w danym województwie mają duże miasta (głównie przemysłowe). Przyjrzeliśmy się jak wygląda rozkład odsetka zachorowań w powiatach w każdym województwie. I tu wyrózniliśmy dwie grupy - województwa nie posiadające dużego miasta przemysłowego - jak świętokrzyskie czy lubuskie, gdzie nie było wyraźnego dominatora, jak i województwa z wyraźnym dominatorem - miastem, które wybijało się ponad inne powiaty.
 
 ###Województwa bez większego miasta
 W poniższych województwach mamy mały odsetek zachorowań, ale nie ma większego miasta, które wpływałoby 
 na odsetek zachorowań. Największe odsetki zachorowań mają powiaty, które nie są miastami.
 <center>
 ```{r myfile-4-plot, echo = F, results = 'asis'}
-cat('\n![ ](Lubuskie.png) ![](Swietokrzyskie.png)\n')
+cat('\n![ ](../wykresy/Lubuskie.png) ![](../wykresy/Swietokrzyskie.png)\n')
 ``` 
 </center>
 ###Województwa z większym miastem
-W poniższych województwach mamy duży odsetek zachorowań, a stolicami województw są duże miasta, które bardzo wpływają na odsetek zachorowań i wyraźnie dominują nad resztą. Stąd widać dysproporcję między np Świętokrzyskim a Łódzkim.
+W poniższych województwach mamy duży odsetek zachorowań, a stolicami województw są duże miasta, które bardzo wpływają na odsetek zachorowań i wyraźnie dominują nad resztą. Stąd widać dysproporcję między np. świętokrzyskim a łódzkim.
+
 <center>
 ```{r myfile-8-plot, echo = F, results = 'asis'}
-cat('\n![ ](Lodzkie.png) ![](Mazowieckie.png) ![](Pomorskie.png)\n')
+cat('\n![ ](../wykresy/Lodzkie.png) ![](../wykresy/Mazowieckie.png) ![](../wykresy/Pomorskie.png)\n')
 ``` 
 </center>
 
 ##Podsumowanie
-Z poniższych analiz można wywnioskować, że ważnym czynnikiem wpływającym na liczbę zachorowań jest wiek, jednak ten czynnik nie jest uwarunkowany geograficznie. Dominującym czynnikiem geograficznym wpływającym na liczbę zachorowań jest podział duże miasto przemysłowe - inny powiat. Ten podział wydaje się dużo bardziej zasadny niż kryterium np województwa.
-
-
-
-
+Z poniższych analiz można wywnioskować, że ważnym czynnikiem wpływającym na liczbę zachorowań jest wiek, jednak ten czynnik nie jest uwarunkowany geograficznie. Dominującym czynnikiem geograficznym wpływającym na liczbę zachorowań jest podział duże miasto przemysłowe - inny powiat. Ten podział wydaje się dużo bardziej zasadny niż kryterium np. województwa.
