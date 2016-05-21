@@ -1,0 +1,105 @@
+---
+title: "Projekt 2 Faza 1"
+author: "Patrycja Matys, Jan Rosa, Krzysztof Rutkowski, Magda Sobiczewska"
+date: "17 maja 2016"
+output: 
+  html_document:
+    fig_caption: yes
+    toc: true
+---
+
+##Wprowadzenie
+Dokonaliœmy eksploracji danych zawieraj¹cych liczbê przypadków raka piersi w Polsce w latach 2010, 2011, 2012 z podzia³em na p³eæ, 6 kategorii wiekowych, fazê choroby, kod TERYT/powiat, województwo. Wykorzystaliœmy równie¿ dane z GUS, aby pracowaæ jedynie na znormalizowanych danych oraz bazy wspó³rzêdnych geograficznych z https://github.com/pbiecek/teryt, by wykonaæ kartogramy.
+
+Dokonuj¹c synchronizacji wyjœciowych danych z danymi GUS napotkaliœmy dwie rozbie¿noœci. W GUS brak informacji na temat powiatu o kodzie TERYT 1431, st¹d pominêliœmy ten powiat w eksploracji oraz w danych wyjœciowych brakuje kodu TERYT 0265 (miasto Wa³brzych), który wystêpuje w GUS - zdecydowaliœmy, ¿e  uto¿samimy TERYT 0265 (miasto Wa³brzych) z TERYT 0221 (powiat wa³brzyski).
+
+Na wstêpie szukaliœmy poziomów danych interesuj¹cych statystycznie i w dalszej czêœci raportu bêdziemy pracowaæ tylko na tych najbardziej interesuj¹cych.
+
+##Hipoteza badawcza
+
+Naszym g³ównym celem by³a szeroka eksploracja danych i znalezienie czynników, które wp³ywaj¹ na rozmieszczenie
+raka piersi w ca³ej Polsce.
+
+##Analiza czynników wp³ywaj¹cych na liczbê zachorowañ
+
+###P³eæ
+Na pocz¹tku chcieliœmy zobaczyæ, jak wygl¹daj¹ znormalizowane dane w zale¿noœci od p³ci (liczbê zachorowañ w danym województwie podzieliliœmy przez ludnoœæ województwa).
+
+<center>
+```{r myfile-0-plot, echo = F, results = 'asis'}
+cat('\n![ ](plec2.png)\n')
+``` 
+</center>
+
+Z powy¿szego wykresu widzimym, ¿e odsetki dla mê¿czyzn w podziale na województwa s¹ niewielkie i równomiernie roz³o¿one - czego te¿ mogliœmy siê spodziewaæ patrz¹c na typ raka. Na postawie tego wyniku uznaliœmy, ¿e informacje o zachorowaniach p³ci mêskiej s¹ drugorzêdne, zatem dalej bêdziemy rozwa¿aæ jedynie populacjê kobiet (w dalszej czêœci raportu pracujemy na nastêpuj¹cej normalizacji danych: liczbê zachorowañ kobiet podzieliliœmy przez ludnoœæ kobiet w województwie lub powiecie).
+
+###Grupa wiekowa 
+<center>
+```{r myfile-6-plot, echo = F, results = 'asis'}
+# TODO: dodac dobry wykres
+cat('\n![ ](grupy_wiekowe0.png)\n')
+``` 
+</center>
+
+Na powy¿szym wykresie widzimy, ¿e rozk³ad grup wiekowych w zale¿noœci od województwa jest zbli¿ony w obrêbie ca³ej Polski. Najwiêcej kobiet choruje w œrednim wieku - miêdzy 55, a 64 lat.
+
+###Faza choroby 
+<center>
+```{r myfile-7-plot, echo = F, results = 'asis'}
+cat('\n![ ](fazy_woj0.png)\n')
+``` 
+</center>
+
+Na powy¿szym wykresie widzimy, ¿e równie¿ rozk³ad ró¿nych faz choroby w zale¿noœci od województwa jest zbli¿ony w obrêbie ca³ej Polski (chocia¿ wyró¿niaj¹ siê trzy województwa: w dolnoœl¹skim widzimy wiêkszy procent zachorowañ na fazê 1, a w zachodniopomorskim oraz opolskim na fazê 2). Najwiêcej wykrywa siê w drugiej fazie. 
+
+Pokazaliœmy, ¿e rozk³ad grup wiekowych i faz nie jest istonie wa¿ny ze wzglêdu na kryteria geograficzne, i jest zbli¿ony w obrêbie ca³ej Polski. Zatem dalej bêdziemy pracowaæ na danych zsumowanych zarówno wzglêdem wieku i faz. 
+
+###Województwo
+Na poni¿szym kartogramie widaæ wyraŸny podzia³ zachorowañ ze wzglêdu na województwa, istnieje podzia³: Polska œrodkowa wraz z pó³nocnym zachodem versus po³udniowy wschód. Najwiêkszy odsetek zachorowañ posiada województwo ³ódzkie oraz zachodnio-pomorskie, a najmniejszy podkarpackie.
+
+<center>
+```{r myfile-1-plot, echo = F, results = 'asis'}
+cat('\n![ ](wojewodztwa3.png)\n')
+``` 
+</center>
+
+###Powiat
+Gdy jednak zobaczymy na kartogram dla powiatów, nie widzimy ju¿ tak wyraŸnej ró¿nicy jeœli chodzi o województwa. Jednak widaæ wyraŸnie, ¿e dominuj¹cymi powiatami s¹ du¿e miasta i to one znacz¹co wp³ywaj¹ na województwo.
+
+<center>
+```{r myfile-2-plot, echo = F, results = 'asis'}
+cat('\n![ ](powiaty3.png)\n')
+``` 
+</center>
+
+Spójrzmy teraz na 15 powiatów, w których odsetek zachorowañ jest najwiêkszy. S¹ wœród nich g³ównie du¿e miasta przemys³owe.
+<center>
+```{r myfile-3-plot, echo = F, results = 'asis'}
+cat('\n![ ](powiat_15_max4.png)\n')
+``` 
+</center>
+
+S¹ to nastêpuj¹ce powiaty (w nawiasach wielkoœæ odsetek): Sopot (0.00574), Sosnowiec (0.00432), £ódŸ (0.00428), Czêstochowa (0.00416), Œwinoujœcie (0.00413), Konin (0.00410), Wa³brzyski (0.00401), P³ock (0.00399), Poznañ (0.00394),  Warszawa (0.00390), W³oc³awek (0.00387), Siemianowice Œl¹skie (0.00386), kamiennogórski (0.00386), Gdañsk (0.00385), Szczecin (0.00385).
+
+##Analiza rozk³adu zachorowañ powiatów wzglêdem województw
+Z powy¿szych kartogramów widzimy, ¿e dominuj¹cy wp³yw na odsetek zachorowañ w danym województwie maj¹ du¿e miasta (g³ównie przemys³owe). Przyjrzeliœmy siê jak wygl¹da rozk³ad odsetka zachorowañ w powiatach w ka¿dym województwie. I tu wyrózniliœmy dwie grupy - województwa nie posiadaj¹ce du¿ego miasta przemys³owego - jak œwiêtokrzyskie czy lubuskie, gdzie nie by³o wyraŸnego dominatora, jak i województwa z wyraŸnym dominatorem - miastem, które wybija³o siê ponad inne powiaty.
+
+###Województwa bez wiêkszego miasta
+W poni¿szych województwach mamy ma³y odsetek zachorowañ, ale nie ma wiêkszego miasta, które wp³ywa³oby 
+na odsetek zachorowañ. Najwiêksze odsetki zachorowañ maj¹ powiaty, które nie s¹ miastami.
+<center>
+```{r myfile-4-plot, echo = F, results = 'asis'}
+cat('\n![ ](Lubuskie.png) ![](Swietokrzyskie.png)\n')
+``` 
+</center>
+###Województwa z wiêkszym miastem
+W poni¿szych województwach mamy du¿y odsetek zachorowañ, a stolicami województw s¹ du¿e miasta, które bardzo wp³ywaj¹ na odsetek zachorowañ i wyraŸnie dominuj¹ nad reszt¹. St¹d widaæ dysproporcjê miêdzy np. œwiêtokrzyskim a ³ódzkim.
+
+<center>
+```{r myfile-8-plot, echo = F, results = 'asis'}
+cat('\n![ ](Lodzkie.png) ![](Mazowieckie2.png) ![](Pomorskie.png)\n')
+``` 
+</center>
+
+##Podsumowanie
+Z poni¿szych analiz mo¿na wywnioskowaæ, ¿e wa¿nym czynnikiem wp³ywaj¹cym na liczbê zachorowañ jest wiek, jednak ten czynnik nie jest uwarunkowany geograficznie. Dominuj¹cym czynnikiem geograficznym wp³ywaj¹cym na liczbê zachorowañ jest podzia³ du¿e miasto przemys³owe - inny powiat. Ten podzia³ wydaje siê du¿o bardziej zasadny ni¿ kryterium np. województwa.
