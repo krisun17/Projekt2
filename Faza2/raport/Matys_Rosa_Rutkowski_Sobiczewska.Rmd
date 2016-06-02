@@ -1,0 +1,221 @@
+---
+title: "Faza 2"
+author: "Patrycja Matys, Jan Rosa, Krzysztof Rutkowski, Magda Sobiczewska"
+date: "31 maja 2016"
+output: 
+  html_document:
+    fig_caption: yes
+    toc: true
+---
+
+```{r include=FALSE}
+library(knitr)
+library(caret)
+library(glmnet)
+library(pls)
+library(lars)
+library(markdown)
+```
+
+##Wprowadzenie
+W prezentacji pokażemy w jaki sposób staraliśmy się wybrać model predykcji odsetka zachorować na raka 
+piersi w danym powiecie. Korzystając z analiz dokonanych w pierwszej fazie projektu zdecydowaliśmy się
+robić model wyłączenie dla kobiet. Za czynniki mogące wpływać na odsetek zachorowań wybraliśmy:
+<ul>
+<li> gęstość zaludnienia </li>
+<li> urbanizację </li>
+<li> stężenie szkodliwych substancji w powietrzu </li>
+<li> uciążliwe warunki pracy </li>
+<li> tereny zielone </li>
+<li> strukturę wiekową </li>
+</ul>
+Używaliśmy następujących metod:
+<ul>
+<li> regresja liniowa </li>
+<li> knn z selekcją cech </li>
+<li> SVM </li>
+<li> random forest dla regresji </li>
+<li> random forest ze zdyskretyzowaną zmienną decyzyjną za pomocą klastrowania </li>
+</ul>
+
+Przy użyciu metody walidacji polegającej na 10-krotnym próbkowaniu zbioru testowego
+w stosunku 1:3 (zbiór testowy:zbiór treningowy)
+uzyskaliśmy następujące wyniki (wszystkie wyniki pomnożone przez 10<sup>7</sup>, 
+zapis "knn <i>liczba</i> <i>metoda</i>" oznacza liczbę sąsiadów oraz metodę użytą do selekcji cech):
+
+```{r kable, echo=FALSE}
+load("res_all.RData")
+kable(res)
+```
+
+Widzimy, że najlepiej sprawdziały się knn i regresja liniowa. Te metody omówimy szerzej.
+
+## Przygotowanie danych
+Do predykcji przygotowaliśmy dane dotyczące powiatów, gdzie zmienną objaśnianą jest znormalizowany
+(przez liczbę kobiet w powiecie) odsetek kobiet chorych na raka piersi. Zaś zmiennymi objaśniającymi
+są czynniki wymienione wyżej.
+```{r}
+load(file = "clean_znorm.RData")
+kable(head(clean.all.data[,1:6]))
+kable(head(clean.all.data[,7:12]))
+```
+
+##Metody
+
+###Regresja liniowa
+Za pomocą regresji liniowej sprawdziliśmy na początek, które czynniki są rzeczywiście istotne. 
+Wyniki testu t pokazują, że za istotne należy uznać:
+<ul>
+<li> gęstość zaludnienia </li>
+<li> urbanizację </li>
+</ul>
+Przy bardziej tolerancyjnym poziomie istotności ważne również będzie stężenie szkodliwych substancji.
+
+```{r, echo=FALSE}
+fit<-lm(LICZBA_ZACHOROWAN~.-TERYT-PYLY-wiek85-sredni, clean.all.data)
+summary(fit)
+
+```
+
+Mimo, że test t wskazał iż żaden z czynników dotyczących struktury wiekowej nie jest istotny statystycznie , to test F udowodnił iż cała ta grupa zmiennych jest istotna.
+```{r, echo=FALSE}
+fit1<-lm(LICZBA_ZACHOROWAN ~ GAZY+GESTOSC+URBANIZACJA+ZAGROZENIA,clean.all.data)
+var.test(fit,fit1)
+```
+Potwierdza to również model w którym zamiast grup wiekowych użyto tylko średniego wieku mieszkańców powiatu. 
+```{r, echo=FALSE}
+fit2<-lm(LICZBA_ZACHOROWAN ~ GAZY +sredni+GESTOSC+URBANIZACJA+ZAGROZENIA,clean.all.data)
+summary(fit2)
+```
+Następnie porównaliśmy metody predykcji, wielkorotnie trenując model wylosowanej z danych próbce. 
+Najpierw porównano bardziej klasyczne metody: 
+<ul>
+<li> regresje liniową z maksymalną liczbą parametrów </li>
+<li> regresje z liczbą parametrów wskazaną przez kryterium Akaike </li>
+<li> regresje grzbietową i lasso wykorzystując wszytskie parametry</li>
+<li> metodę PCA wykorzystując 4 wektory PCR </li>
+</ul>
+
+Wykres przedstawia porównanie błędów przy próbkowaniach dla trzech metod, średni MSE dla wszytskich metod przedstawia tablela. 
+
+###Wybór metody
+```{r setup, include=FALSE, echo=FALSE, results='hide'}
+wynik_pre_normal1<-rep(0,92)
+wynik_aic1<-rep(0,92)
+wynik_cv_lasso1<-rep(0,92)
+wynik_cv_ridge1<-rep(0,92)
+wynik_pc_ostat1<-rep(0,92)
+
+i=1
+for (i in 1:92) {
+  training<-sample(1:length(clean.all.data$LICZBA_ZACHOROWAN), length(clean.all.data$LICZBA_ZACHOROWAN)*(3/4))
+  clean_all_data_train<-clean.all.data[training, ]  #1/4
+  clean_all_data_test<-clean.all.data[-training,]
+  
+  fit1_normal<-lm(LICZBA_ZACHOROWAN ~ GAZY+GESTOSC+URBANIZACJA+ZAGROZENIA+ ZIELONE + wiek0_44 + wiek45_54 + wiek55_64 + 
+                    wiek65_74 + wiek75_84,data=clean_all_data_train)
+  pre_normal<-predict(fit1_normal, clean_all_data_test )
+  
+  wynik_pre_normal1[i]<-mean((clean_all_data_test$LICZBA_ZACHOROWAN-pre_normal)^2)
+  
+  fit1_aic<-step(fit1_normal,data=clean_all_data_train, direction="backward")
+  
+  pre_aic<-predict(fit1_aic, clean_all_data_test )
+  
+  wynik_aic1[i]<-mean((clean_all_data_test$LICZBA_ZACHOROWAN-pre_aic)^2)
+  
+  
+  wynik_cv_lasso<-cv.glmnet(x=as.matrix(clean_all_data_train[,-c(1,2,8,14,15)]),clean_all_data_train[,8], alpha=1)
+  wynik_cv_ridge<-cv.glmnet(x=as.matrix(clean_all_data_train[,-c(1,2,8,15,14)]),clean_all_data_train[,8], alpha=0)
+  
+  wynik_cv_lasso_pred<-predict.cv.glmnet(object =wynik_cv_lasso,newx=as.matrix(clean_all_data_test[,-c(1,2,8,15,14)]),)
+  
+  wynik_cv_lasso1[i]<-mean((clean_all_data_test$LICZBA_ZACHOROWAN-wynik_cv_lasso_pred)^2)
+  
+  
+  wynik_cv_ridge_pred<-predict.cv.glmnet(object =wynik_cv_ridge,newx=as.matrix(clean_all_data_test[,-c(1,2,8,15,14)]),)
+  wynik_cv_ridge1[i]<-mean((clean_all_data_test$LICZBA_ZACHOROWAN-wynik_cv_ridge_pred)^2)
+  
+  wynik_pcr<-pcr(LICZBA_ZACHOROWAN ~GAZY+GESTOSC+URBANIZACJA+ZAGROZENIA+ ZIELONE + wiek0_44 + wiek45_54 + wiek55_64 + 
+                   wiek65_74 + wiek75_84 , data=clean_all_data_train, ncomp=4)
+  
+  wynik_pcr_pred<-predict(wynik_pcr,clean_all_data_test)
+  
+  wynik_pc_ostat1[i]<-mean((clean_all_data_test$LICZBA_ZACHOROWAN-wynik_pcr_pred)^2)
+}
+
+
+```
+```{r, echo=FALSE}
+library(ggplot2)
+a<-as.data.frame(rbind(wynik_pre_normal1,wynik_aic1,wynik_cv_lasso1,wynik_cv_ridge1,wynik_pc_ostat1))
+a<-t(a)
+a<-as.data.frame(a)
+a$x<-c(1:92)
+
+ggplot(data = a, aes(x = x)) +
+  geom_line(aes(y = a$wynik_pre_normal1, colour = "Klasyczna regresja linowa")) +
+  geom_line(aes(y = a$wynik_cv_ridge1, colour = "Regresja grzebietowa")) +
+  geom_line(aes(y = a$wynik_pc_ostat1, colour = "PCA")) +
+  scale_colour_manual("", 
+                      breaks = c("Klasyczna regresja linowa", "Regresja grzebietowa", "PCA"),
+                      values = c("red", "green", "blue")) +
+  xlab("numer próbkowania") +
+  scale_y_continuous("MSE", limits = c(1.0e-07,4.0e-07)) + 
+  labs(title="Porównanie błędów")
+
+
+```
+
+Jak widać, za najlepsza metodę predykcji musimy na razie uznać zwykłą regresję liniową.
+
+Wizualne przedstawienie wyników uzyskanych metodą regresji
+
+
+<img src="powiaty.png" />
+
+<img src="predykcja.png" />
+
+###KNN
+Algorytm knn zastosowaliśmy w dwóch krokach:
+<ol>
+<li> Stworzyliśmy ranking cech korzystając z: </li>
+<ul>
+  <li> testu niezależności chi-kwadrat </li>
+  <li> testu korelacji rankingowej (korelacja Spearmana) </li>
+</ul>
+<li> Zastosowaliśmy algorytm knn dla wybranych, najlepszych cech </li>
+</ol>
+stosując metrykę ważoną przez wagi uzyskane w selekcji atrybutów
+
+Kod metryki:
+```{r}
+dist <- function(x, y, weights) {
+  return(sum(weights * abs(x-y)))
+}
+```
+
+Ranking cech na podstawie selekcji rank:
+
+```{r}
+load("weights_rank.RData")
+kable(weights.rank)
+```
+
+Badaliśmy wyniki uzyskane z analizy 5 i 10 najlepszych sąsiadów. 
+Jako metodę głosowania wśród zbioru sąsiadów wybraliśmy średnią.
+
+Wizualne przedstawienie wyników uzyskanych metodą KNN
+
+
+<img src="powiaty.png" />
+
+<img src="predknn10.png" />
+
+
+##Podsumowanie
+Wyniki uzyskane metodą regresji jak i KNN są dość zbliżone, jednak lepsze uzyskujemy 
+metodą knn, gdyż ma większą siłę predykcyjną, ale działa dużo wolniej i nie mamy gotowego modelu.
+Z analiz selekcji atrybutów dla knn, jak i analizy regresji widać, że najistotniejszymi cechami
+z punktu widzenia predykcji odsetka zachorowań są urbanizacja, gęstość zaludnienia, struktura wiekowa oraz
+zanieczyszczenia.
