@@ -1,0 +1,215 @@
+---
+title: "Modele predykcji zachorowañ na raka"
+author: "Patrzycja Matys, Jan Rosa, Krzysztof Rutkowski, Magda Sobiczewska"
+date: "18 czerwca 2016"
+output: html_document
+---
+
+#Wprowadzenie
+## Przygotowanie danych
+Do predykcji przygotowaliœmy dane dotycz¹ce powiatów, gdzie zmienn¹ objaœnian¹ jest znormalizowany
+(przez liczbê osób w powiecie) **odsetek chorych na raka piersi**. Zaœ zmiennymi objaœniaj¹cymi
+s¹ czynniki wymienione w czêsci poœwieæonej metodologii. Poni¿sza tabela przedstawia omawiane zmienne.
+```{r}
+kable(head(y11[,1:6]))
+kable(head(y11[,7:12]))
+kable(head(y11[,13:18]))
+```
+
+## Sposób predykcji
+
+Zdolonoœæ predykcyjn¹ modeli zbadaliœmy estymuj¹c model na podstawie danych z **2011** roku, a nastêpnie porównujac predykcjê modelu na **2012** roku z rzeczywistymi wartoœciami. Za kryterium obraliœmy b³¹d RMSE.
+
+```{r include=FALSE}
+mse <- function(pred, y) {
+  return(mean((pred-y)^2, na.rm=TRUE))
+}
+rmse <- function(pred, y) {
+  return(sqrt(mean((pred-y)^2, na.rm=TRUE)))
+}
+```
+
+#U¿yte modele
+U¿ywaliœy nastêpuj¹cych metod:    
+<ul>
+<li> regresja liniowa </li>
+<li> xgboost </li>
+</ul>
+
+
+##########
+Widzimy, ¿e najlepiej sprawdza³y siê **regresja liniowa i xgboost**. Te metody omówimy szerzej.
+
+#Metodologia i wybór czynników
+
+Na podstawie literatury przedmiotu, w poprzedniej fazie zauwa¿yliœmy ¿e nastêpuj¹ce czynniki s¹ wa¿ne:
+<ul>
+<li>wiek</li>
+<li>p³eæ</li> 
+<li>stê¿enie szkodliwych py³ów</li>
+<li>stê¿enie szkodliwych gazów</li>
+<li>urbanizacjê</li> 
+<li>gêstoœæ zaludnienia</li>
+</ul> 
+
+
+W trzeciej fazie postanowiliœmy dodaæ tak¿e czynniki:
+ul>
+<li>spo¿ycie alkoholu alkoholu wœród kobiet (dane dla województw)</li> 
+<li>spo¿ycie alkoholu alkoholu wœród mê¿czyzn (dane dla województw)</li> 
+<li>oty³oœæ wœród kobiet (dane dla województw)</li> 
+<li>oty³oœæ wœród mê¿czyzn (dane dla województw)</li> 
+<li>liczbê osób zarejestrowanych w poradniach psychologicznych (o zaburzeniach nie alkoholowych ani nie schizofrenicznych)</li> 
+<li>liczbê osób z zaburzeniami psychicznymi (dane dla województw)</li>
+<li>liczbê osób chorych w poprzednim okresie</li>
+</ul>
+Za jedne z najwa¿niejszych przyczyn nowotworu z³oœliwego piersi jest uznawane spo¿ycie alkoholu oraz oty³oœæ, z tego powodu dodaliœmy pierwsze cztery czynniki. Za bardzo wa¿ny determinant uznawany jest równie¿  poziom stresu, który przybli¿aæ maj¹ zmienne opisuj¹ce liczbê osób z problemami psychicznymi. 
+
+    
+#U¿yte modele
+##Modele liniowe
+W pierwszej kolejnosæi sprawdzono 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(glmnet)
+library(knitr)
+mse <- function(pred, y) {
+  return(mean((pred-y)^2, na.rm=TRUE))
+}
+rmse <- function(pred, y) {
+  return(sqrt(mean((pred-y)^2, na.rm=TRUE)))
+}
+```
+W pierwszej kolejnosci oszacowalismy i przetstowano modele linowe. Estymacji dokonaliœmy na danych z 2011 roku.Nastêpnie przetetowaliœmy moc predykcyjn¹ modeli, porównujac predykcjê na 2012 rok z danymi. Poniewa¿ modele linowe maj¹ podobne w³asnoœci, postanowiliœmy wybraæ najlepszy pod wzgledem RMSE, doka³dne zaœ analizy  rozk³adu b³êdów wykonaliœmy przy poróWnaniu najlepszego zmodlei liniowych z innymi typami modeli.   
+
+Z modeli linowych na pocz¹tku oszacowano zwyk³y model regresji. W zbiorze zmeinnych objaœnianych znalaz³y siê wszytskie rozwa¿ane przez nas zmienne, a tak¿e interakcje miedzy zmiennymi wiek a urbanizacja. Pierwszy model wykorzystywa³ wszystkie zmienne, drugi zmienne wybrane na podstawie kryterium BIC.Otrzymano nastêpuj¹ce modele.
+
+```{r cars, echo=FALSE}
+#print(getwd())
+load(file="regresja_dane.Rdata")
+fit1_normal1<-lm(zm_dec.x~ GAZY +GESTOSC+ZIELONE+ URBANIZACJA+
+                   ZAGROZENIA+PYLY+GENDER*Fotytly*URBANIZACJA+
+                   GENDER*Falkohol*URBANIZACJA+GENDER*Motytly+GENDER*Malkohol+
+                   URBANIZACJA+as.factor(AGE_GROUP)*URBANIZACJA+nsrednia.y+zsrednia.y+nsrednia.y*URBANIZACJA+opoznienie, data=y11)
+
+fit1_aic<-step(fit1_normal1,data=grupa_m3, direction="backward",criterion = "BIC", trace=0)
+summary(fit1_normal1)
+summary(fit1_aic)
+
+```
+
+Jak widaæ w obu przydadkach, za istotne zmienne, na podstawie testu t, nale¿y uznaæ: Urbanizacjê, gestoœæ zaludnenia, wiek, a tak¿e liczbê osób zarejestrowanych w poradniach psychologicznych.  
+
+```{r kable, echo=FALSE}
+res <- data.frame(matrix(ncol=2, nrow=2))
+colnames(res) <- c("model", "wyniki")
+res$model <- c("normal", "aic")
+res$wyniki <- c(rmse(predict(fit1_normal1,y12), y12$zm_dec.x)*10^5, 
+                rmse(predict(fit1_aic,y12), y12$zm_dec.x)*10^5)
+kable(res)
+
+b1<-predict(fit1_aic,y12)- y12$zm_dec.x
+b2<-as.data.frame(b1)
+```
+
+Nastêpnie na oszacowano uogólnione modele regresji  wykorzystuj¹ce wszytskie zmienne, oraz zmienne wybrane na podstawie kryterium BIC. Analogicznie do modeli regresji liniowej przetestowano ich moc predykcyjn¹.
+Z wspó³czynnik alfa przyjêto:
+<ul>
+<li>1.0 (lasso)</li>
+<li>0.5</li> 
+<li>0.25</li> 
+<li>0.0 (ridge)</li> 
+</ul>
+```{r, echo=FALSE}
+f <- as.formula(zm_dec.x~ GAZY +GESTOSC+ZIELONE+ URBANIZACJA+
+                  ZAGROZENIA+PYLY+Fotytly*URBANIZACJA+
+                  Falkohol+Motytly+GENDER*Malkohol+
+                  URBANIZACJA+as.factor(AGE_GROUP)+nsrednia.y+zsrednia.y
+                +nsrednia.y*URBANIZACJA+opoznienie)
+                
+options(na.action='na.omit')
+
+x1 <- model.matrix(f, y11,na.action=NULL)
+x2<-as.data.frame(x1)
+y1 <- na.omit(y11)
+library(glmnet)
+
+wynik_cv_lasso<-cv.glmnet(x=x1,y=as.matrix(y1[,17]), alpha=1)
+wynik_cv_ridge<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=0)
+wynik_cv_pol<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=1/2)
+wynik_cv_pol1<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=1/4)
+
+
+y12<-subset(y12, TERYT4!=1461)
+y2 <- na.omit(y12)
+y21 <- y12[complete.cases(y12),]
+
+wynik_cv_lasso_pred<-predict.cv.glmnet(object =wynik_cv_lasso,newx=model.matrix(f, y12,na.action=NULL),)
+wynik_cv_ridge_pred<-predict.cv.glmnet(object =wynik_cv_ridge,newx=model.matrix(f, y12,na.action=NULL),)
+wynik_cv_pol_pred<-predict.cv.glmnet(object =wynik_cv_pol,newx=model.matrix(f, y12,na.action=NULL),)
+wynik_cv_pol1_pred<-predict.cv.glmnet(object =wynik_cv_pol1,newx=model.matrix(f, y12,na.action=NULL),)
+
+
+```
+Wyniki dla uogólnionych modeli
+```{r, echo=FALSE}
+res <- data.frame(matrix(ncol=2, nrow=4))
+colnames(res) <- c("model", "wyniki")
+res$model <- c("lasso", "ridge", "alfa 0.5", "alfa 0.25")
+res$wyniki <- c(rmse(y2[,17], wynik_cv_lasso_pred)*10^5, 
+                rmse(y2[,17], wynik_cv_ridge_pred)*10^5,
+                rmse(y2[,17], wynik_cv_pol_pred)*10^5,
+                rmse(y2[,17], wynik_cv_pol1_pred)*10^5)
+kable(res)
+```
+
+
+```{r, echo=FALSE}
+f1<-formula(fit1_aic)
+
+x1 <- model.matrix(f1, y11,na.action=NULL)
+y1 <- na.omit(y11)
+
+
+wynik_cv_lasso<-cv.glmnet(x=x1,y=as.matrix(y1[,17]), alpha=1)
+wynik_cv_ridge<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=0)
+wynik_cv_pol<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=1/2)
+wynik_cv_pol1<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=1/4)
+
+
+
+y2 <- na.omit(y12)
+
+wynik_cv_lasso_pred<-predict.cv.glmnet(object =wynik_cv_lasso,newx=model.matrix(f1, y12,na.action=NULL),)
+wynik_cv_ridge_pred<-predict.cv.glmnet(object =wynik_cv_ridge,newx=model.matrix(f1, y12,na.action=NULL),)
+wynik_cv_pol_pred<-predict.cv.glmnet(object =wynik_cv_pol,newx=model.matrix(f1, y12,na.action=NULL),)
+wynik_cv_pol1_pred<-predict.cv.glmnet(object =wynik_cv_pol1,newx=model.matrix(f1, y12,na.action=NULL),)
+
+
+res <- data.frame(matrix(ncol=2, nrow=4))
+colnames(res) <- c("model", "wyniki")
+res$model <- c("lasso", "ridge", "alfa 0.5", "alfa 0.25")
+res$wyniki <- c(rmse(y2[,17], wynik_cv_lasso_pred)*10^5, 
+                rmse(y2[,17], wynik_cv_ridge_pred)*10^5,
+                rmse(y2[,17], wynik_cv_pol_pred)*10^5,
+                rmse(y2[,17], wynik_cv_pol1_pred)*10^5)
+kable(res)
+
+```
+Ostaeczne wyniki przedstawia tabela
+```{r}
+res
+b2<-na.omit(b2)
+boxplot(b2$b1)
+```
+
+Ostaecznie wiêc przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskaza³o iz najlepiej radzi sobie model liniowy, z zestawiem zmiennych wybranych na podtsawie kryterium BIC.  
+
+Przeprowadzono takz analizy dla modeli estymowanych osobno dla obu p³ci, jednak ich moc predykcyjna okaza³a sie zdecydowanie gorsza.
+
+##Pozosta³e modele
+#Koñcowy model
+```{r}
+```
+
+#Wnioski
