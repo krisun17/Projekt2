@@ -1,0 +1,106 @@
+---
+title: ""
+author: "Patrzycja Matys, Jan Rosa, Krzysztof Rutkowski, Magda Sobiczewska"
+date: "17 czerwca 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(glmnet)
+```
+#Regresja liniowa
+Z modeli linowych na pocz?tku oszacowano zwyk?y model regresji. W zbiorze zmeinnych obja?nianych znalaz?y si? wszytskie rozwa?ane przez nas zmienne, czyli: wiek, p?e?, st??enie szkodliwych py??w, wysokie spo?ycie alkoholu alkoholu zar?Wno w?r?d kobiet jak i me?czyzn, oty?o??, urbanizacj?, g?sto?? zaludnienia oraz liczb? os?b zarejestrowanych w poradniach psychologicznych, oraz liczb? os?b z zabrzeniami psychicznymi i w ko?cu liczb? os?b chorych w poprzednim okresie. Dodano takz interakcje miedzy zmiennymi wiek a urbanizacja. Otrzymano nast?puj?ce modele.
+
+```{r cars}
+load(file="regresja_dane.Rdata")
+fit1_normal1<-lm(zm_dec.x~ GAZY +GESTOSC+ZIELONE+ URBANIZACJA+
+                   ZAGROZENIA+PYLY+GENDER*Fotytly*URBANIZACJA+
+                   GENDER*Falkohol*URBANIZACJA+GENDER*Motytly+GENDER*Malkohol+
+                   URBANIZACJA+as.factor(AGE_GROUP)*URBANIZACJA+nsrednia.y+zsrednia.y+nsrednia.y*URBANIZACJA+opoznienie,
+                 data=y11)
+
+
+summary(fit1_normal1)
+fit1_aic<-step(fit1_normal1,data=grupa_m3, direction="backward",criterion = "BIC")
+summary(fit1_aic)
+```
+Zdolonos? predykcyjn? modeli zbadano estymuj?c model na podstawie danych z 2011 roku, a nast?pnie por?nujac predykcj? modelu na 2012 z rzeczywistymi wartosciami.Za kryterium obrano b??d ?redniokwadratowy.
+Model wybrany na podstawie kryterium BIC radzi sobie nieco lepiej od modelu wykorzystujacego wszytskie zmienne.
+
+```{r pressure, echo=FALSE}
+mean((predict(fit1_normal1,y12)-y12$zm_dec.x)^2,na.rm=TRUE)
+mean((predict(fit1_aic,y12)-y12$zm_dec.x)^2,na.rm=TRUE)
+```
+Nast?pnie na oszacowano uog?lnione modele regresji  wykorzystuj?ce wszytskie zmienne.
+Z wsp??czynnik alfa przyj?to:1,0, 1/2 oraz 1/4
+```{r}
+f <- as.formula(zm_dec.x~ GAZY +GESTOSC+ZIELONE+ URBANIZACJA+
+                  ZAGROZENIA+PYLY+Fotytly*URBANIZACJA+
+                  Falkohol+Motytly+GENDER*Malkohol+
+                  URBANIZACJA+as.factor(AGE_GROUP)+nsrednia.y+zsrednia.y
+                +nsrednia.y*URBANIZACJA+opoznienie)
+                
+options(na.action='na.omit')
+
+x1 <- model.matrix(f, y11,na.action=NULL)
+x2<-as.data.frame(x1)
+y1 <- na.omit(y11)
+library(glmnet)
+
+wynik_cv_lasso<-cv.glmnet(x=x1,y=as.matrix(y1[,17]), alpha=1)
+wynik_cv_ridge<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=0)
+wynik_cv_pol<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=1/2)
+wynik_cv_pol1<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=1/4)
+
+
+y12<-subset(y12, TERYT4!=1461)
+y2 <- na.omit(y12)
+y21 <- y12[complete.cases(y12),]
+
+wynik_cv_lasso_pred<-predict.cv.glmnet(object =wynik_cv_lasso,newx=model.matrix(f, y12,na.action=NULL),)
+wynik_cv_ridge_pred<-predict.cv.glmnet(object =wynik_cv_ridge,newx=model.matrix(f, y12,na.action=NULL),)
+wynik_cv_pol_pred<-predict.cv.glmnet(object =wynik_cv_pol,newx=model.matrix(f, y12,na.action=NULL),)
+wynik_cv_pol1_pred<-predict.cv.glmnet(object =wynik_cv_pol1,newx=model.matrix(f, y12,na.action=NULL),)
+
+
+```
+Predykcyjn? moc modeli sprawdzono r?wnie? na podstawie MSE
+```{r}
+mean((y2[,17]-wynik_cv_lasso_pred)^2)
+mean((y2[,17]-wynik_cv_ridge_pred)^2)
+mean((y2[,17]-wynik_cv_pol_pred)^2)
+mean((y2[,17]-wynik_cv_pol1_pred)^2)
+```
+Nast?pnie przeanalizowano modele glm dla tego samego zestawu zmienneych jak w modelu linowym wybranym na podtswie krytrium BIC. Analogicznie przetestowano ich moc produkcyjn?.
+
+```{r}
+f1<-formula(fit1_aic)
+
+x1 <- model.matrix(f1, y11,na.action=NULL)
+y1 <- na.omit(y11)
+
+
+wynik_cv_lasso<-cv.glmnet(x=x1,y=as.matrix(y1[,17]), alpha=1)
+wynik_cv_ridge<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=0)
+wynik_cv_pol<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=1/2)
+wynik_cv_pol1<-cv.glmnet(x=x1,y=as.matrix(y1[,17]),alpha=1/4)
+
+
+
+y2 <- na.omit(y12)
+
+wynik_cv_lasso_pred<-predict.cv.glmnet(object =wynik_cv_lasso,newx=model.matrix(f1, y12,na.action=NULL),)
+wynik_cv_ridge_pred<-predict.cv.glmnet(object =wynik_cv_ridge,newx=model.matrix(f1, y12,na.action=NULL),)
+wynik_cv_pol_pred<-predict.cv.glmnet(object =wynik_cv_pol,newx=model.matrix(f1, y12,na.action=NULL),)
+wynik_cv_pol1_pred<-predict.cv.glmnet(object =wynik_cv_pol1,newx=model.matrix(f1, y12,na.action=NULL),)
+
+
+mean((y2[,17]-wynik_cv_lasso_pred)^2)
+mean((y2[,17]-wynik_cv_ridge_pred)^2)
+mean((y2[,17]-wynik_cv_pol_pred)^2)
+mean((y2[,17]-wynik_cv_pol1_pred)^2)
+```
+Ostaecznie wi?c przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskaza?o iz najlepiej radzi sobie model linowy, z zestawiem zmiennych wybranych na podtsawie kryterium BIC.  
+
+Przeprowadzono takz analizy dla modeli estymowyanych osobno dla obu p?ci, jednak ich moc predykcyjna okaza?a sie zdecydowanie gorsza.  
