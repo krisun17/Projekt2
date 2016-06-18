@@ -148,6 +148,46 @@ Ostaecznie więc przetestowanie mocy predykcyjnej modeli na danych z 2012 roku w
 Przeprowadzono takz analizy dla modeli estymowyanych osobno dla obu płci, jednak ich moc predykcyjna okazała sie zdecydowanie gorsza.
 
 ##Pozostałe modele
+Przetestowaliśmy również szereg innych modeli. Analiza została wykonana z wykorzystaniem pakietu "caret"
+oraz przeszukiwanie kombinacji parametrów, które dają najlepsze wyniki. Do doboru parametrów użyliśmy
+10-krotnej kroswalidacji, zaś walidację wykonaliśmy na zbiorze z 2012 roku, tak jak dla modeli liniowych.
+Przetestowaliśmy następujące modele:
+<ul>
+<li>random forest</li>
+<li>gradient boosting</li> 
+<li>gradient boosting z selekcją atrybutów</li> 
+<li>SVM</li> 
+<li>knn z metryką ważoną przez ważność atrybutu</li>
+</ul>
+Selekcję atrybutów dla boostingu wykonywaliśmy za pomocą korelacji Pearsona.
+Dla metody knn, przeskalowaliśmy wszystkie atrybuty, oraz pomnożyliśmy każdą cechę przez wagę uzyskaną
+z korelacji między zmienną decyzyjną:
+```{r, eval=FALSE}
+scaled.data <- data.frame(scale(data))
+weights <- rank.correlation(dec ~ ., scaled.data)$attr_importance
+knn.data <- t( t(scaled.data) * weights)
+```
+
+Uzyskaliśmy następujące wyniki:
+```{r, echo=FALSE}
+load(file="svmFit.Rdata")
+load(file="gbmFit.Rdata")
+load(file="gbmFitSel.Rdata")
+load(file="knnFit.Rdata")
+load(file="rfFit.Rdata")
+load(file="knn_data.Rdata")
+res <- data.frame(matrix(ncol=2, nrow=5))
+colnames(res) <- c("model", "wyniki")
+res$model <- c("gbm z selekcją", "gbm", "knn", "random forest", "svm")
+res$wyniki <- c(rmse(y2[,17], predict(gbmFitSel, y2[,-17]))*10^5, 
+                rmse(y2[,17], predict(gbmFit, y2[,-17]))*10^5,
+                rmse(knn.data[,17], predict(knnFit, knn.data[,-17]))*10^5,
+                rmse(y2[,17], predict(rfFit, y2[,-17]))*10^5,
+                rmse(y2[,17], predict(svmFit, y2[,-17]))*10^5)
+kable(res)
+```
+
+Widzimy, że najlepsze wyniki zostały uzyskanę metodą boostingu z selekcją atrybutów.
 #Końcowy model
 #Wnioski
 
