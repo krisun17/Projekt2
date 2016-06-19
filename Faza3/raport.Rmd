@@ -220,7 +220,7 @@ kable(res)
 Ostateczne wyniki przedstawia tabela:
 
 ```{r, echo=FALSE}
-head(res)
+kable(head(res))
 ```
 
 Ostatecznie, przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskazało, iż najlepiej radzi sobie model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC.  
