@@ -5,6 +5,12 @@ date: "18 czerwca 2016"
 output: html_document
 ---
 
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+load(file="regresja_dane.Rdata")
+library(knitr)
+```
+
 #Wprowadzenie
 ## Przygotowanie danych
 Do predykcji przygotowaliœmy dane dotycz¹ce powiatów, gdzie zmienn¹ objaœnian¹ jest znormalizowany
@@ -100,7 +106,7 @@ summary(fit1_aic)
 
 Jak widaæ w obu przydadkach, za istotne zmienne, na podstawie testu t, nale¿y uznaæ: urbanizacjê, gestoœæ zaludnenia, wiek, poziom spo¿ycia alkoholu wœród kobiet a tak¿e liczbê osób zarejestrowanych w poradniach psychologicznych.  
 
-```{r kable, echo=FALSE}
+```{r kable, echo=FALSE, warning=FALSE}
 res <- data.frame(matrix(ncol=2, nrow=2))
 colnames(res) <- c("model", "wyniki")
 res$model <- c("normal", "aic")
@@ -196,7 +202,9 @@ res$wyniki <- c(rmse(y2[,17], wynik_cv_lasso_pred)*10^5,
 kable(res)
 
 ```
-Ostaeczne wyniki przedstawia tabela
+
+Ostateczne wyniki przedstawia tabela
+
 ```{r}
 res
 b2<-na.omit(b2)
@@ -208,8 +216,47 @@ Ostatecznie wiêc przetestowanie mocy predykcyjnej modeli na danych z 2012 roku w
 Przeprowadzono takz analizy dla modeli estymowanych osobno dla obu p³ci, jednak ich moc predykcyjna okaza³a sie zdecydowanie gorsza.
 
 ##Pozosta³e modele
+
 #Koñcowy model
-```{r}
+
+Na podstawie analizy b³êdów zdecydowaliœmy siê na zastosowanie modelu "mieszanego", który sk³ada siê z __gradient boosting__ oraz __regresji liniowej__.
+
+Opis wybranego modelu:
+<ul>
+<li>nie rozpatrujemy podzia³u na grupy wiekowe (nie zauwa¿yliœmy znacz¹cych ró¿nic)</li>
+<li>rozpatrujemy podzia³ na p³eæ</li>
+<li>dla mê¿czyzn stosujemy model gradient boosting</li>
+<li>dla kobiet rozpatrujemy podzia³ na TERYT,  odciêcia zosta³y wykonane na podstawie funkcji:</li>
+</ul>
+
+```{r, eval=FALSE}
+teryt.groups$is_linear <- teryt.groups$bool_difs < 0 & teryt.groups$difs < -1e-05 
+teryt.groups$is_boost <- teryt.groups$bool_difs > 0 & teryt.groups$difs > 1e-05 
+teryt.groups$clf <- teryt.groups$is_linear * 1 + teryt.groups$is_boost * -1
 ```
+ 
+zatem w zale¿noœci od wielkoœci ró¿nic œrednich znaków (bool_difs) oraz ró¿nic w œrednich (difs) (progi +/-1e-05 zosta³y dobrane na podstawie Wykresu b³êdów -  _patrz poni¿ej_) stosujemy regresjê liniow¹ (clf=1) lub gradient boosting (clf=-1) oraz zdecydowaliœmy, ¿e w przypadku braku wyraŸnej ró¿nicy miêdzy modelami (clf=0) zastosujemy gradient boosting.
+
+__Wykres b³êdów__ (oœ pozioma to numer TERYT):
+
+<center>
+<img src="roznice.png" />
+</center>
+
+Powy¿szy opis ilustruje drzewo decyzyjne:
+
+<center>
+<img src="drzewo.png" />
+</center>
+
+#Prezentacja wyników 
+
+Na poni¿szych kartogramach prezentujemy predykcjê na rok 2013 odsetek zachorowañ z podzia³em na p³eæ:
+
+<center>
+<img src="kobiety.png" />
+
+<img src="mezczyzni.png" />
+<center/>
 
 #Wnioski
