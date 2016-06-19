@@ -606,19 +606,19 @@ liczbę osób chorych w poprzednim okresie
 <tbody>
 <tr class="odd">
 <td align="left">lasso</td>
-<td align="right">7.573752</td>
+<td align="right">7.551858</td>
 </tr>
 <tr class="even">
 <td align="left">ridge</td>
-<td align="right">7.663578</td>
+<td align="right">7.628802</td>
 </tr>
 <tr class="odd">
 <td align="left">alfa 0.5</td>
-<td align="right">7.612679</td>
+<td align="right">7.587894</td>
 </tr>
 <tr class="even">
 <td align="left">alfa 0.25</td>
-<td align="right">7.563198</td>
+<td align="right">7.580386</td>
 </tr>
 </tbody>
 </table>
@@ -636,24 +636,24 @@ liczbę osób chorych w poprzednim okresie
 </tr>
 <tr class="even">
 <td align="left">ridge</td>
-<td align="right">7.650348</td>
+<td align="right">7.608819</td>
 </tr>
 <tr class="odd">
 <td align="left">alfa 0.5</td>
-<td align="right">7.540112</td>
+<td align="right">7.563354</td>
 </tr>
 <tr class="even">
 <td align="left">alfa 0.25</td>
-<td align="right">7.592175</td>
+<td align="right">7.569006</td>
 </tr>
 </tbody>
 </table>
 <p>Ostateczne wyniki przedstawia tabela:</p>
 <pre><code>##       model   wyniki
 ## 1     lasso 7.530727
-## 2     ridge 7.650349
-## 3  alfa 0.5 7.540112
-## 4 alfa 0.25 7.592175</code></pre>
+## 2     ridge 7.608819
+## 3  alfa 0.5 7.563355
+## 4 alfa 0.25 7.569006</code></pre>
 <p>Ostatecznie, przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskazało, iż najlepiej radzi sobie model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC.</p>
 <p>Przeprowadzono także analizy dla modeli estymowanych osobno dla każdej płci, jednak ich moc predykcyjna okazała sie zdecydowanie gorsza.</p>
 </div>
@@ -733,7 +733,12 @@ dla mężczyzn stosujemy model gradient boosting
 dla kobiet rozpatrujemy podział na TERYT, odcięcia zostały wykonane na podstawie funkcji:
 </li>
 </ul>
-<pre class="r"><code>teryt.groups$is_linear &lt;- teryt.groups$bool_difs &lt; 0 &amp; teryt.groups$difs &lt; -1e-05 
+<pre class="r"><code>y12.ok$dif_sign &lt;- sign(y12.ok$difs)
+
+y12.ok %&gt;% group_by( TERYT4 ) %&gt;% 
+  summarise( difs = mean(difs), bool_difs = mean(dif_sign), ers = mean(errors),  ers_lin=mean(errors_lin)) -&gt; teryt.groups
+
+teryt.groups$is_linear &lt;- teryt.groups$bool_difs &lt; 0 &amp; teryt.groups$difs &lt; -1e-05 
 teryt.groups$is_boost &lt;- teryt.groups$bool_difs &gt; 0 &amp; teryt.groups$difs &gt; 1e-05 
 teryt.groups$clf &lt;- teryt.groups$is_linear * 1 + teryt.groups$is_boost * -1</code></pre>
 <p>zatem w zależności od wielkości różnic średnich znaków (bool_difs) oraz różnic w średnich (difs) (progi +/-1e-05 zostały dobrane na podstawie Wykresu błędów - <em>patrz poniżej</em>) stosujemy regresję liniową (clf=1) lub gradient boosting (clf=-1) oraz zdecydowaliśmy, że w przypadku braku wyraźnej różnicy między modelami (clf=0) zastosujemy gradient boosting.</p>
