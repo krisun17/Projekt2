@@ -15,11 +15,11 @@ library(knitr)
 
 #Wprowadzenie
 
-Celem trzeciej fazy było stworzenie modelu, który najlepiej dokona predykcji liczby zachorowań na raka piersi w Polsce na następny rok, tj. 2013 w podziale na powiat, płeć i grupę wiekową. Predykcję dokonaliśmy bazując na danych zawierających liczbę przypadków raka piersi w Polsce w latach 2010, 2011, 2012 z podziałem na płeć, 6 grup wiekowych, fazę choroby, kod TERYT/powiat oraz województwo. Korzystając z analiz dokonanych w poprzednich fazach, uznaliśmy, że dodatkowo wykorzystamy dane z Banku Danych Lokalnych GUS - dane te opisują czynniki mogące wpływać na odsetek zachorowań.
+Celem trzeciej fazy było stworzenie modelu, który najlepiej dokona predykcji liczby zachorowań na raka piersi w Polsce na następny rok, tj. 2013 w podziale na powiat, płeć i grupę wiekową. Predykcji dokonaliśmy, bazując na danych zawierających liczbę przypadków raka piersi w Polsce w latach 2010, 2011, 2012 z podziałem na płeć, 6 grup wiekowych, fazę choroby, kod TERYT/powiat oraz województwo. Korzystając z analiz dokonanych w poprzednich fazach, uznaliśmy, że dodatkowo wykorzystamy dane z Banku Danych Lokalnych GUS - dane te opisują czynniki mogące wpływać na odsetek zachorowań.
 
 ## Przygotowanie danych
 Do predykcji przygotowaliśmy dane dotyczące powiatów, gdzie zmienną objaśnianą jest znormalizowany
-(przez liczbę osób w powiecie) **odsetek chorych na raka piersi**. Zaś zmiennymi objaśniającymi
+(przez liczbę osób w powiecie) **odsetek chorych na raka piersi**, zaś zmiennymi objaśniającymi
 są czynniki wymienione w częsci poświęconej metodologii. Poniższa tabela przedstawia omawiane zmienne:
 ```{r}
 kable(head(y11[,1:6]))
@@ -29,7 +29,7 @@ kable(head(y11[,13:18]))
 
 ## Sposób predykcji
 
-Zdoloność predykcyjną modeli zbadaliśmy estymując model na podstawie danych z **2011** roku, a następnie porównujac predykcję modelu na **2012** roku z rzeczywistymi wartościami.Optymalne paremetry dobieraliśmy za pomocą przeszukiwania parametrów i ewaluacji modelu za pomocą 10-krotnej kroswalidacji. Za kryterium obraliśmy błąd RMSE. Wyniki we wszystkich tabelach zostały pomnożone przez 10<sup>5</sup>.
+Zdoloność predykcyjną modeli zbadaliśmy, estymując model na podstawie danych z **2011** roku, a następnie porównujac predykcję modelu na **2012** roku z rzeczywistymi wartościami.Optymalne parmetry dobieraliśmy za pomocą przeszukiwania parametrów i ewaluacji modelu za pomocą 10-krotnej kroswalidacji. Za kryterium obraliśmy błąd RMSE. Wyniki we wszystkich tabelach zostały pomnożone przez 10^5.
 
 ```{r include=FALSE}
 mse <- function(pred, y) {
@@ -45,16 +45,13 @@ Użyliśmy następujących metod:
 <ul>
 <li> regresja liniowa </li>
 <li> gradient boosting </li> 
-<li> SVM </li>
-<li> random forest </li>
-<li> knn </li>
 </ul>
 
 Jak się poniżej okaże, najlepiej sprawdziły się **regresja liniowa z zestawem zmiennych wybranych na podstawie kryterium BIC** oraz **gradient boosting z selekcją atrybutów**. Wybór najlepszych modeli przedstawiamy poniżej.
 
 ##Metodologia i wybór czynników
 
-Na podstawie literatury przedmiotu, w poprzedniej fazie zauważyliśmy że następujące czynniki są ważne:
+Na podstawie literatury przedmiotu, w poprzedniej fazie zauważyliśmy, że ważne są następujące czynniki:
 <ul>
 <li>wiek</li>
 <li>płeć</li> 
@@ -75,7 +72,7 @@ W trzeciej fazie postanowiliśmy dodać także czynniki:
 <li>liczbę osób z zaburzeniami psychicznymi (dane dla województw)</li>
 <li>liczbę osób chorych w poprzednim okresie</li>
 </ul>
-Za jedne z najważniejszych przyczyn nowotworu złośliwego piersi jest uznawane spożycie alkoholu oraz otyłość, z tego powodu dodaliśmy pierwsze cztery czynniki. Za bardzo ważny determinant uznawany jest również wysoki poziom stresu, który przybliżać mają zmienne opisujące liczbę osób z problemami psychicznymi. 
+Za jedne z najważniejszych przyczyn nowotworu złośliwego piersi jest uznawane spożycie alkoholu oraz otyłość. Z tego powodu dodaliśmy pierwsze cztery czynniki. Za bardzo ważny determinant uznawany jest również wysoki poziom stresu, który przybliżać mają zmienne opisujące liczbę osób z problemami psychicznymi. 
 
     
 ##Modele liniowe
@@ -123,7 +120,7 @@ Następnie oszacowaliśmy uogólnione modele regresji:
 
 1) Wykorzystujące wszystkie z opracowanych przez nas zmiennych (analogicznie z pierwszym modelem regresji liniowej). 
 
-2) Uogólnione modele regresji wykorzystujące te zmienne, które użyliśmy do szacowania modelu regresji linowej wybranego na podstawie kryterium BIC.
+2) Uogólnione modele regresji wykorzystujące te zmienne, których użyliśmy do oszacowania modelu regresji linowej wybranego na podstawie kryterium BIC.
 
 Analogicznie do modeli regresji liniowej przetestowaliśmy ich moc predykcyjną.
 Za współczynnik alfa przyjęliśmy:
@@ -222,7 +219,7 @@ kable(res)
 Ostateczne wyniki przedstawia tabela:
 
 ```{r, echo=FALSE}
-kable(head(res))
+head(res)
 ```
 
 Ostatecznie, przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskazało, iż najlepiej radzi sobie **model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC**.  
@@ -244,7 +241,7 @@ Przetestowaliśmy następujące modele:
 <li>SVM</li> 
 </ul>
 Selekcję atrybutów dla boostingu wykonywaliśmy za pomocą korelacji Pearsona.
-Dla metody knn, przeskalowaliśmy wszystkie atrybuty, oraz pomnożyliśmy każdą cechę przez wagę uzyskaną
+Dla metody knn, przeskalowaliśmy wszystkie atrybuty oraz pomnożyliśmy każdą cechę przez wagę uzyskaną
 z korelacji między zmienną decyzyjną:
 
 ```{r, eval=FALSE}
@@ -264,7 +261,7 @@ load(file="rfFit.Rdata")
 load(file="knn_data.Rdata")
 res <- data.frame(matrix(ncol=2, nrow=5))
 colnames(res) <- c("model", "wyniki")
-res$model <- c("boosting z selekcją", "boosting", "knn", "random forest", "svm")
+res$model <- c("gbm z selekcją", "gbm", "knn", "random forest", "svm")
 res$wyniki <- c(rmse(y2[,17], predict(gbmFitSel, y2[,-17]))*10^5, 
                 rmse(y2[,17], predict(gbmFit, y2[,-17]))*10^5,
                 rmse(knn.data[,17], predict(knnFit, knn.data[,-17]))*10^5,
@@ -324,4 +321,4 @@ Na poniższych kartogramach prezentujemy predykcję na rok 2013 odsetka zachorow
 
 #Podsumowanie
 
-Na podstawie testu t oraz liniowej korelacji Pearsona, spośród zgromadzonych czynników jako najistotniejsze wybraliśmy następujące: gęstość zaludnienia, urbanizację, wiek, poziom spożycia alkoholu wśród kobiet oraz liczbę osób zarejestrowanych w poradniach psychologicznych. Przetestowanie mocy predykcyjnej modeli wskazało, iż najlepiej radzi sobie gradient boosting z selekcją atrybutów, gradient boosting oraz model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC. W oparciu o analizę błędów, ostatecznie zdecydowaliśmy się na zastosowanie modelu *“mieszanego”*, który składa się z **gradient boostingu oraz regresji liniowej**.
+Na podstawie testu t oraz liniowej korelacji Pearsona spośród zgromadzonych czynników jako najistotniejsze wybraliśmy następujące: gęstość zaludnienia, urbanizację, wiek, poziom spożycia alkoholu wśród kobiet oraz liczbę osób zarejestrowanych w poradniach psychologicznych. Przetestowanie mocy predykcyjnej modeli wskazało, iż najlepiej radzi sobie gradient boosting z selekcją atrybutów, gradient boosting oraz model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC. W oparciu o analizę błędów, ostatecznie zdecydowaliśmy się na zastosowanie modelu *“mieszanego”*, który składa się z **gradient boostingu oraz regresji liniowej**.
