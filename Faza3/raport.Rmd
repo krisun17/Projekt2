@@ -6,7 +6,66 @@ output: html_document
 ---
 
 #Wprowadzenie
+## Przygotowanie danych
+Do predykcji przygotowaliśmy dane dotyczące powiatów, gdzie zmienną objaśnianą jest znormalizowany
+(przez liczbę osób w powiecie) **odsetek chorych na raka piersi**. Zaś zmiennymi objaśniającymi
+są czynniki wymienione w częsci poświećonej metodologii. Poniższa tabela przedstawia omawiane zmienne.
+```{r}
+kable(head(y11[,1:6]))
+kable(head(y11[,7:12]))
+kable(head(y11[,13:18]))
+```
+
+## Sposób predykcji
+
+Zdoloność predykcyjną modeli zbadaliśmy estymując model na podstawie danych z **2011** roku, a następnie porównujac predykcję modelu na **2012** roku z rzeczywistymi wartościami. Za kryterium obraliśmy błąd RMSE.
+
+```{r include=FALSE}
+mse <- function(pred, y) {
+  return(mean((pred-y)^2, na.rm=TRUE))
+}
+rmse <- function(pred, y) {
+  return(sqrt(mean((pred-y)^2, na.rm=TRUE)))
+}
+```
+
+#Użyte modele
+Używaliśy następujących metod:    
+<ul>
+<li> regresja liniowa </li>
+<li> xgboost </li>
+</ul>
+
+
+##########
+Widzimy, że najlepiej sprawdzały się **regresja liniowa i xgboost**. Te metody omówimy szerzej.
+
 #Metodologia i wybór czynników
+
+Na podstawie literatury przedmiotu, w poprzedniej fazie zauważyliśmy że następujące czynniki są ważne:
+<ul>
+<li>wiek</li>
+<li>płeć</li> 
+<li>stężenie szkodliwych pyłów</li>
+<li>stężenie szkodliwych gazów</li>
+<li>urbanizację</li> 
+<li>gęstość zaludnienia</li>
+</ul> 
+
+
+W trzeciej fazie postanowiliśmy dodać także czynniki:
+<ul>
+<li>spożycie alkoholu alkoholu wśród kobiet (dane dla województw)</li> 
+<li>spożycie alkoholu alkoholu wśród mężczyzn (dane dla województw)</li> 
+<li>otyłość wśród kobiet (dane dla województw)</li> 
+<li>otyłość wśród mężczyzn (dane dla województw)</li> 
+<li>liczbę osób zarejestrowanych w poradniach psychologicznych (o zaburzeniach nie alkoholowych i nie schizofrenicznych)</li> 
+<li>liczbę osób z zaburzeniami psychicznymi (dane dla województw)</li>
+<li>liczbę osób chorych w poprzednim okresie</li>
+</ul>
+Za jedne z najważniejszych przyczyn nowotworu złośliwego piersi jest uznawane spożycie alkoholu oraz otyłość, z tego powodu dodaliśmy pierwsze cztery czynniki. Za bardzo ważny determinant uznawany jest również wysoki poziom stresu, który przybliżać mają zmienne opisujące liczbę osób z problemami psychicznymi. 
+
+    
 #Użyte modele
 ##Modele liniowe
 ```{r setup, include=FALSE}
@@ -20,21 +79,9 @@ rmse <- function(pred, y) {
   return(sqrt(mean((pred-y)^2, na.rm=TRUE)))
 }
 ```
-Z modeli linowych na początku oszacowano zwykły model regresji. W zbiorze zmeinnych objaśnianych znalazły się wszytskie rozważane przez nas zmienne, czyli: 
-<ul>
-<li>wiek</li>
-<li>płeć</li> 
-<li>stężenie szkodliwych pyłów</li> 
-<li>spożycie alkoholu alkoholu wśród kobiet</li> 
-<li>spożycie alkoholu alkoholu wśród mężczyzn</li> 
-<li>otyłość</li> 
-<li>urbanizację</li> 
-<li>gęstość zaludnienia</li>
-<li>liczbę osób zarejestrowanych w poradniach psychologicznych</li> 
-<li>liczbę osób z zabrzeniami psychicznymi</li>
-<li>liczbę osób chorych w poprzednim okresie</li>
-</ul> 
-Dodano także interakcje miedzy zmiennymi wiek a urbanizacja. Otrzymano następujące modele.
+W pierwszej kolejności oszacowalismy i przetestowaliśmy modele linowe. Moc predykcyjną przetestowaliśmy opisaną wyżej metodą.
+
+Z modeli linowych na początku oszacowano zwykły model regresji. W zbiorze zmiennych objaśnianych znalazły się wszystkie rozważane przez nas zmienne, a także interakcje między wiekiem a urbanizacją. Pierwszy model wykorzystywał wszystkie zmienne, drugi czynniki wybrane na podstawie kryterium BIC. Otrzymano następujące modele:
 
 ```{r cars, echo=FALSE}
 #print(getwd())
@@ -45,9 +92,12 @@ fit1_normal1<-lm(zm_dec.x~ GAZY +GESTOSC+ZIELONE+ URBANIZACJA+
                    URBANIZACJA+as.factor(AGE_GROUP)*URBANIZACJA+nsrednia.y+zsrednia.y+nsrednia.y*URBANIZACJA+opoznienie, data=y11)
 
 fit1_aic<-step(fit1_normal1,data=grupa_m3, direction="backward",criterion = "BIC", trace=0)
+summary(fit1_normal1)
+summary(fit1_aic)
+
 ```
 
-Model wybrany na podstawie kryterium BIC radzi sobie nieco lepiej od modelu wykorzystujacego wszytskie zmienne.
+Jak widać w obu przydadkach, za istotne zmienne, na podstawie testu t, należy uznać: urbanizację, gestość zaludnenia, wiek, poziom spożycia alkoholu wśród kobiet a także liczbę osób zarejestrowanych w poradniach psychologicznych.  
 
 ```{r kable, echo=FALSE}
 res <- data.frame(matrix(ncol=2, nrow=2))
@@ -56,9 +106,10 @@ res$model <- c("normal", "aic")
 res$wyniki <- c(rmse(predict(fit1_normal1,y12), y12$zm_dec.x)*10^5, 
                 rmse(predict(fit1_aic,y12), y12$zm_dec.x)*10^5)
 kable(res)
+
 ```
 
-Następnie na oszacowano uogólnione modele regresji  wykorzystujące wszytskie zmienne.
+Następnie na oszacowano uogólnione modele regresji  wykorzystujące wszytskie zmienne, oraz zmienne wybrane na podstawie kryterium BIC. Analogicznie do modeli regresji liniowej przetestowano ich moc predykcyjną.
 Z współczynnik alfa przyjęto:
 <ul>
 <li>1.0 (lasso)</li>
@@ -109,7 +160,6 @@ res$wyniki <- c(rmse(y2[,17], wynik_cv_lasso_pred)*10^5,
 kable(res)
 ```
 
-Następnie przeanalizowano modele glm dla tego samego zestawu zmienneych jak w modelu linowym wybranym na podtswie krytrium BIC. Analogicznie przetestowano ich moc predykcyjną.
 
 ```{r, echo=FALSE}
 f1<-formula(fit1_aic)
@@ -141,11 +191,17 @@ res$wyniki <- c(rmse(y2[,17], wynik_cv_lasso_pred)*10^5,
                 rmse(y2[,17], wynik_cv_pol_pred)*10^5,
                 rmse(y2[,17], wynik_cv_pol1_pred)*10^5)
 kable(res)
+
+```
+Ostaeczne wyniki przedstawia tabela
+```{r}
+head(res)
 ```
 
-Ostaecznie więc przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskazało iz najlepiej radzi sobie model liniowy, z zestawiem zmiennych wybranych na podtsawie kryterium BIC.  
+Ostatecznie więc przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskazało iż najlepiej radzi sobie model liniowy, z zestawem zmiennych wybranych na podstawie kryterium BIC.  
 
-Przeprowadzono takz analizy dla modeli estymowyanych osobno dla obu płci, jednak ich moc predykcyjna okazała sie zdecydowanie gorsza.
+Przeprowadzono także analizy dla modeli estymowanych osobno dla każdej płci, jednak ich moc predykcyjna okazała sie zdecydowanie gorsza.
+
 
 ##Pozostałe modele
 Przetestowaliśmy również szereg innych modeli. Analiza została wykonana z wykorzystaniem pakietu "caret"
