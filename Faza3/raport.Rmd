@@ -1,24 +1,33 @@
 ---
-title: "Modele predykcji zachorowaÅ„ na raka"
-author: "Patrzycja Matys, Jan Rosa, Krzysztof Rutkowski, Magda Sobiczewska"
-date: "18 czerwca 2016"
-output: html_document
+title: "Modele predykcji zachorowañ na raka piersi w Polsce"
+author: "Patrycja Matys, Jan Rosa, Krzysztof Rutkowski, Magda Sobiczewska"
+date: "17 czerwca 2016"
+output: 
+  html_document:
+    fig_caption: yes
+    toc: true
 ---
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+load(file="regresja_dane.Rdata")
+library(knitr)
+```
 
 #Wprowadzenie
+
 ## Przygotowanie danych
-Do predykcji przygotowaliÅ›my dane dotyczÄ…ce powiatÃ³w, gdzie zmiennÄ… objaÅ›nianÄ… jest znormalizowany
-(przez liczbÄ™ osÃ³b w powiecie) **odsetek chorych na raka piersi**. ZaÅ› zmiennymi objaÅ›niajÄ…cymi
-sÄ… czynniki wymienione w czÄ™sci poÅ›wieÄ‡onej metodologii. PoniÅ¼sza tabela przedstawia omawiane zmienne.
+Do predykcji przygotowaliœmy dane dotycz¹ce powiatów, gdzie zmienn¹ objaœnian¹ jest znormalizowany
+(przez liczbê osób w powiecie) **odsetek chorych na raka piersi**. Zaœ zmiennymi objaœniaj¹cymi
+s¹ czynniki wymienione w czêsci poœwieæonej metodologii. Poni¿sza tabela przedstawia omawiane zmienne.
 ```{r}
 kable(head(y11[,1:6]))
 kable(head(y11[,7:12]))
 kable(head(y11[,13:18]))
 ```
 
-## SposÃ³b predykcji
+## Sposób predykcji
 
-ZdolonoÅ›Ä‡ predykcyjnÄ… modeli zbadaliÅ›my estymujÄ…c model na podstawie danych z **2011** roku, a nastÄ™pnie porÃ³wnujac predykcjÄ™ modelu na **2012** roku z rzeczywistymi wartoÅ›ciami. Za kryterium obraliÅ›my bÅ‚Ä…d RMSE.
+Zdolonoœæ predykcyjn¹ modeli zbadaliœmy estymuj¹c model na podstawie danych z **2011** roku, a nastêpnie porównujac predykcjê modelu na **2012** roku z rzeczywistymi wartoœciami. Za kryterium obraliœmy b³¹d RMSE.
 
 ```{r include=FALSE}
 mse <- function(pred, y) {
@@ -29,8 +38,8 @@ rmse <- function(pred, y) {
 }
 ```
 
-#UÅ¼yte modele
-UÅ¼ywaliÅ›y nastÄ™pujÄ…cych metod:    
+#U¿yte modele
+U¿ywaliœy nastêpuj¹cych metod:    
 <ul>
 <li> regresja liniowa </li>
 <li> xgboost </li>
@@ -38,35 +47,34 @@ UÅ¼ywaliÅ›y nastÄ™pujÄ…cych metod:
 
 
 ##########
-Widzimy, Å¼e najlepiej sprawdzaÅ‚y siÄ™ **regresja liniowa i xgboost**. Te metody omÃ³wimy szerzej.
+Widzimy, ¿e najlepiej sprawdza³y siê **regresja liniowa i xgboost**. Te metody omówimy szerzej.
 
-#Metodologia i wybÃ³r czynnikÃ³w
+##Metodologia i wybór czynników
 
-Na podstawie literatury przedmiotu, w poprzedniej fazie zauwaÅ¼yliÅ›my Å¼e nastÄ™pujÄ…ce czynniki sÄ… waÅ¼ne:
+Na podstawie literatury przedmiotu, w poprzedniej fazie zauwa¿yliœmy ¿e nastêpuj¹ce czynniki s¹ wa¿ne:
 <ul>
 <li>wiek</li>
-<li>pÅ‚eÄ‡</li> 
-<li>stÄ™Å¼enie szkodliwych pyÅ‚Ã³w</li>
-<li>stÄ™Å¼enie szkodliwych gazÃ³w</li>
-<li>urbanizacjÄ™</li> 
-<li>gÄ™stoÅ›Ä‡ zaludnienia</li>
+<li>p³eæ</li> 
+<li>stê¿enie szkodliwych py³ów</li>
+<li>stê¿enie szkodliwych gazów</li>
+<li>urbanizacjê</li> 
+<li>gêstoœæ zaludnienia</li>
 </ul> 
 
 
-W trzeciej fazie postanowiliÅ›my dodaÄ‡ takÅ¼e czynniki:
+W trzeciej fazie postanowiliœmy dodaæ tak¿e czynniki:
 <ul>
-<li>spoÅ¼ycie alkoholu alkoholu wÅ›rÃ³d kobiet (dane dla wojewÃ³dztw)</li> 
-<li>spoÅ¼ycie alkoholu alkoholu wÅ›rÃ³d mÄ™Å¼czyzn (dane dla wojewÃ³dztw)</li> 
-<li>otyÅ‚oÅ›Ä‡ wÅ›rÃ³d kobiet (dane dla wojewÃ³dztw)</li> 
-<li>otyÅ‚oÅ›Ä‡ wÅ›rÃ³d mÄ™Å¼czyzn (dane dla wojewÃ³dztw)</li> 
-<li>liczbÄ™ osÃ³b zarejestrowanych w poradniach psychologicznych (o zaburzeniach nie alkoholowych i nie schizofrenicznych)</li> 
-<li>liczbÄ™ osÃ³b z zaburzeniami psychicznymi (dane dla wojewÃ³dztw)</li>
-<li>liczbÄ™ osÃ³b chorych w poprzednim okresie</li>
+<li>spo¿ycie alkoholu alkoholu wœród kobiet (dane dla województw)</li> 
+<li>spo¿ycie alkoholu alkoholu wœród mê¿czyzn (dane dla województw)</li> 
+<li>oty³oœæ wœród kobiet (dane dla województw)</li> 
+<li>oty³oœæ wœród mê¿czyzn (dane dla województw)</li> 
+<li>liczbê osób zarejestrowanych w poradniach psychologicznych (o zaburzeniach nie alkoholowych i nie schizofrenicznych)</li> 
+<li>liczbê osób z zaburzeniami psychicznymi (dane dla województw)</li>
+<li>liczbê osób chorych w poprzednim okresie</li>
 </ul>
-Za jedne z najwaÅ¼niejszych przyczyn nowotworu zÅ‚oÅ›liwego piersi jest uznawane spoÅ¼ycie alkoholu oraz otyÅ‚oÅ›Ä‡, z tego powodu dodaliÅ›my pierwsze cztery czynniki. Za bardzo waÅ¼ny determinant uznawany jest rÃ³wnieÅ¼ wysoki poziom stresu, ktÃ³ry przybliÅ¼aÄ‡ majÄ… zmienne opisujÄ…ce liczbÄ™ osÃ³b z problemami psychicznymi. 
+Za jedne z najwa¿niejszych przyczyn nowotworu z³oœliwego piersi jest uznawane spo¿ycie alkoholu oraz oty³oœæ, z tego powodu dodaliœmy pierwsze cztery czynniki. Za bardzo wa¿ny determinant uznawany jest równie¿ wysoki poziom stresu, który przybli¿aæ maj¹ zmienne opisuj¹ce liczbê osób z problemami psychicznymi. 
 
     
-#UÅ¼yte modele
 ##Modele liniowe
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -79,9 +87,9 @@ rmse <- function(pred, y) {
   return(sqrt(mean((pred-y)^2, na.rm=TRUE)))
 }
 ```
-W pierwszej kolejnoÅ›ci oszacowalismy i przetestowaliÅ›my modele linowe. Moc predykcyjnÄ… przetestowaliÅ›my opisanÄ… wyÅ¼ej metodÄ….
+W pierwszej kolejnoœci oszacowalismy i przetestowaliœmy modele linowe. Moc predykcyjn¹ przetestowaliœmy opisan¹ wy¿ej metod¹.
 
-Z modeli linowych na poczÄ…tku oszacowano zwykÅ‚y model regresji. W zbiorze zmiennych objaÅ›nianych znalazÅ‚y siÄ™ wszystkie rozwaÅ¼ane przez nas zmienne, a takÅ¼e interakcje miÄ™dzy wiekiem a urbanizacjÄ…. Pierwszy model wykorzystywaÅ‚ wszystkie zmienne, drugi czynniki wybrane na podstawie kryterium BIC. Otrzymano nastÄ™pujÄ…ce modele:
+Z modeli linowych na pocz¹tku oszacowano zwyk³y model regresji. W zbiorze zmiennych objaœnianych znalaz³y siê wszystkie rozwa¿ane przez nas zmienne, a tak¿e interakcje miêdzy wiekiem a urbanizacj¹. Pierwszy model wykorzystywa³ wszystkie zmienne, drugi czynniki wybrane na podstawie kryterium BIC. Otrzymano nastêpuj¹ce modele:
 
 ```{r cars, echo=FALSE}
 #print(getwd())
@@ -97,9 +105,9 @@ summary(fit1_aic)
 
 ```
 
-Jak widaÄ‡ w obu przydadkach, za istotne zmienne, na podstawie testu t, naleÅ¼y uznaÄ‡: urbanizacjÄ™, gestoÅ›Ä‡ zaludnenia, wiek, poziom spoÅ¼ycia alkoholu wÅ›rÃ³d kobiet a takÅ¼e liczbÄ™ osÃ³b zarejestrowanych w poradniach psychologicznych.  
+Jak widaæ w obu przypadkach, za istotne zmienne, na podstawie testu t, nale¿y uznaæ: urbanizacjê, gestoœæ zaludnenia, wiek, poziom spo¿ycia alkoholu wœród kobiet, a tak¿e liczbê osób zarejestrowanych w poradniach psychologicznych.  
 
-```{r kable, echo=FALSE}
+```{r kable, echo=FALSE, warning=FALSE}
 res <- data.frame(matrix(ncol=2, nrow=2))
 colnames(res) <- c("model", "wyniki")
 res$model <- c("normal", "aic")
@@ -109,14 +117,15 @@ kable(res)
 
 ```
 
-NastÄ™pnie na oszacowano uogÃ³lnione modele regresji  wykorzystujÄ…ce wszytskie zmienne, oraz zmienne wybrane na podstawie kryterium BIC. Analogicznie do modeli regresji liniowej przetestowano ich moc predykcyjnÄ….
-Z wspÃ³Å‚czynnik alfa przyjÄ™to:
+Nastêpnie na oszacowano uogólnione modele regresjiwykorzystuj¹ce wszystkie zmienne, oraz zmienne wybrane na podstawie kryterium BIC. Analogicznie do modeli regresji liniowej przetestowano ich moc predykcyjn¹.
+Z wspó³czynnik alfa przyjêto:
 <ul>
 <li>1.0 (lasso)</li>
 <li>0.5</li> 
 <li>0.25</li> 
 <li>0.0 (ridge)</li> 
 </ul>
+
 ```{r, echo=FALSE}
 f <- as.formula(zm_dec.x~ GAZY +GESTOSC+ZIELONE+ URBANIZACJA+
                   ZAGROZENIA+PYLY+Fotytly*URBANIZACJA+
@@ -148,7 +157,9 @@ wynik_cv_pol1_pred<-predict.cv.glmnet(object =wynik_cv_pol1,newx=model.matrix(f,
 
 
 ```
-Wyniki dla uogÃ³lnionych modeli
+
+Wyniki dla uogólnionych modeli:
+
 ```{r, echo=FALSE}
 res <- data.frame(matrix(ncol=2, nrow=4))
 colnames(res) <- c("model", "wyniki")
@@ -193,39 +204,43 @@ res$wyniki <- c(rmse(y2[,17], wynik_cv_lasso_pred)*10^5,
 kable(res)
 
 ```
-Ostaeczne wyniki przedstawia tabela
+
+Ostateczne wyniki przedstawia tabela:
+
 ```{r}
 head(res)
 ```
 
-Ostatecznie wiÄ™c przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskazaÅ‚o iÅ¼ najlepiej radzi sobie model liniowy, z zestawem zmiennych wybranych na podstawie kryterium BIC.  
+Ostatecznie, wiêc przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskaza³o i¿ najlepiej radzi sobie model liniowy, z zestawem zmiennych wybranych na podstawie kryterium BIC.  
 
-Przeprowadzono takÅ¼e analizy dla modeli estymowanych osobno dla kaÅ¼dej pÅ‚ci, jednak ich moc predykcyjna okazaÅ‚a sie zdecydowanie gorsza.
+Przeprowadzono tak¿e analizy dla modeli estymowanych osobno dla ka¿dej p³ci, jednak ich moc predykcyjna okaza³a sie zdecydowanie gorsza.
 
 
-##PozostaÅ‚e modele
-PrzetestowaliÅ›my rÃ³wnieÅ¼ szereg innych modeli. Analiza zostaÅ‚a wykonana z wykorzystaniem pakietu "caret"
-oraz przeszukiwanie kombinacji parametrÃ³w, ktÃ³re dajÄ… najlepsze wyniki. Do doboru parametrÃ³w uÅ¼yliÅ›my
-10-krotnej kroswalidacji, zaÅ› walidacjÄ™ wykonaliÅ›my na zbiorze z 2012 roku, tak jak dla modeli liniowych.
-PrzetestowaliÅ›my nastÄ™pujÄ…ce modele:
+##Pozosta³e modele
+Przetestowaliœmy równie¿ szereg innych modeli. Analiza zosta³a wykonana z wykorzystaniem pakietu "caret"
+oraz przeszukiwanie kombinacji parametrów, które daj¹ najlepsze wyniki. Do doboru parametrów u¿yliœmy
+10-krotnej kroswalidacji, zaœ walidacjê wykonaliœmy na zbiorze z 2012 roku, tak jak dla modeli liniowych.
+Przetestowaliœmy nastêpuj¹ce modele:
 <ul>
 <li>random forest</li>
 <li>gradient boosting</li> 
-<li>gradient boosting z selekcjÄ… atrybutÃ³w</li> 
+<li>gradient boosting z selekcj¹ atrybutów</li> 
 <li>SVM</li> 
-<li>knn z metrykÄ… waÅ¼onÄ… przez waÅ¼noÅ›Ä‡ atrybutu</li>
+<li>knn z metryk¹ wa¿on¹ przez wa¿noœæ atrybutu</li>
 </ul>
-SelekcjÄ™ atrybutÃ³w dla boostingu wykonywaliÅ›my za pomocÄ… korelacji Pearsona.
-Dla metody knn, przeskalowaliÅ›my wszystkie atrybuty, oraz pomnoÅ¼yliÅ›my kaÅ¼dÄ… cechÄ™ przez wagÄ™ uzyskanÄ…
-z korelacji miÄ™dzy zmiennÄ… decyzyjnÄ…:
+Selekcjê atrybutów dla boostingu wykonywaliœmy za pomoc¹ korelacji Pearsona.
+Dla metody knn, przeskalowaliœmy wszystkie atrybuty, oraz pomno¿yliœmy ka¿d¹ cechê przez wagê uzyskan¹
+z korelacji miêdzy zmienn¹ decyzyjn¹:
+
 ```{r, eval=FALSE}
 scaled.data <- data.frame(scale(data))
 weights <- rank.correlation(dec ~ ., scaled.data)$attr_importance
 knn.data <- t( t(scaled.data) * weights)
 ```
 
-UzyskaliÅ›my nastÄ™pujÄ…ce wyniki:
-```{r, echo=FALSE}
+Uzyskaliœmy nastêpuj¹ce wyniki:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 load(file="svmFit.Rdata")
 load(file="gbmFit.Rdata")
 load(file="gbmFitSel.Rdata")
@@ -234,7 +249,7 @@ load(file="rfFit.Rdata")
 load(file="knn_data.Rdata")
 res <- data.frame(matrix(ncol=2, nrow=5))
 colnames(res) <- c("model", "wyniki")
-res$model <- c("gbm z selekcjÄ…", "gbm", "knn", "random forest", "svm")
+res$model <- c("gbm z selekcj¹", "gbm", "knn", "random forest", "svm")
 res$wyniki <- c(rmse(y2[,17], predict(gbmFitSel, y2[,-17]))*10^5, 
                 rmse(y2[,17], predict(gbmFit, y2[,-17]))*10^5,
                 rmse(knn.data[,17], predict(knnFit, knn.data[,-17]))*10^5,
@@ -243,7 +258,48 @@ res$wyniki <- c(rmse(y2[,17], predict(gbmFitSel, y2[,-17]))*10^5,
 kable(res)
 ```
 
-Widzimy, Å¼e najlepsze wyniki zostaÅ‚y uzyskanÄ™ metodÄ… boostingu z selekcjÄ… atrybutÃ³w.
-#KoÅ„cowy model
-#Wnioski
+Widzimy, ¿e najlepsze wyniki zosta³y uzyskanê metod¹ boostingu z selekcj¹ atrybutów.
 
+#Koñcowy model
+
+Na podstawie analizy b³êdów zdecydowaliœmy siê na zastosowanie modelu "mieszanego", który sk³ada siê z __gradient boosting__ oraz __regresji liniowej__.
+
+Opis wybranego modelu:
+<ul>
+<li>nie rozpatrujemy podzia³u na grupy wiekowe (nie zauwa¿yliœmy znacz¹cych ró¿nic)</li>
+<li>rozpatrujemy podzia³ na p³eæ</li>
+<li>dla mê¿czyzn stosujemy model gradient boosting</li>
+<li>dla kobiet rozpatrujemy podzia³ na TERYT,  odciêcia zosta³y wykonane na podstawie funkcji:</li>
+</ul>
+
+```{r, eval=FALSE}
+teryt.groups$is_linear <- teryt.groups$bool_difs < 0 & teryt.groups$difs < -1e-05 
+teryt.groups$is_boost <- teryt.groups$bool_difs > 0 & teryt.groups$difs > 1e-05 
+teryt.groups$clf <- teryt.groups$is_linear * 1 + teryt.groups$is_boost * -1
+```
+ 
+zatem w zale¿noœci od wielkoœci ró¿nic œrednich znaków (bool_difs) oraz ró¿nic w œrednich (difs) (progi +/-1e-05 zosta³y dobrane na podstawie Wykresu b³êdów -  _patrz poni¿ej_) stosujemy regresjê liniow¹ (clf=1) lub gradient boosting (clf=-1) oraz zdecydowaliœmy, ¿e w przypadku braku wyraŸnej ró¿nicy miêdzy modelami (clf=0) zastosujemy gradient boosting.
+
+__Wykres b³êdów__ (oœ pozioma to numer TERYT):
+
+<center>
+<img src="roznice.png" />
+</center>
+
+Powy¿szy opis ilustruje drzewo decyzyjne:
+
+<center>
+<img src="drzewo.png" />
+</center>
+
+#Prezentacja wyników 
+
+Na poni¿szych kartogramach prezentujemy predykcjê na rok 2013 odsetek zachorowañ z podzia³em na p³eæ:
+
+<center>
+<img src="kobiety.png" />
+
+<img src="mezczyzni.png" />
+<center/>
+
+#Wnioski
