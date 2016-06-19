@@ -610,7 +610,7 @@ liczbę osób chorych w poprzednim okresie
 </tr>
 <tr class="even">
 <td align="left">ridge</td>
-<td align="right">7.628802</td>
+<td align="right">7.729849</td>
 </tr>
 <tr class="odd">
 <td align="left">alfa 0.5</td>
@@ -618,7 +618,7 @@ liczbę osób chorych w poprzednim okresie
 </tr>
 <tr class="even">
 <td align="left">alfa 0.25</td>
-<td align="right">7.580386</td>
+<td align="right">7.621134</td>
 </tr>
 </tbody>
 </table>
@@ -632,11 +632,11 @@ liczbę osób chorych w poprzednim okresie
 <tbody>
 <tr class="odd">
 <td align="left">lasso</td>
-<td align="right">7.530727</td>
+<td align="right">7.555767</td>
 </tr>
 <tr class="even">
 <td align="left">ridge</td>
-<td align="right">7.608819</td>
+<td align="right">7.590732</td>
 </tr>
 <tr class="odd">
 <td align="left">alfa 0.5</td>
@@ -644,16 +644,16 @@ liczbę osób chorych w poprzednim okresie
 </tr>
 <tr class="even">
 <td align="left">alfa 0.25</td>
-<td align="right">7.569006</td>
+<td align="right">7.648221</td>
 </tr>
 </tbody>
 </table>
 <p>Ostateczne wyniki przedstawia tabela:</p>
 <pre><code>##       model   wyniki
-## 1     lasso 7.530727
-## 2     ridge 7.608819
+## 1     lasso 7.555767
+## 2     ridge 7.590732
 ## 3  alfa 0.5 7.563355
-## 4 alfa 0.25 7.569006</code></pre>
+## 4 alfa 0.25 7.648221</code></pre>
 <p>Ostatecznie, przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskazało, iż najlepiej radzi sobie model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC.</p>
 <p>Przeprowadzono także analizy dla modeli estymowanych osobno dla każdej płci, jednak ich moc predykcyjna okazała sie zdecydowanie gorsza.</p>
 </div>
@@ -761,7 +761,7 @@ teryt.groups$clf &lt;- teryt.groups$is_linear * 1 + teryt.groups$is_boost * -1</
 </div>
 <div id="podsumowanie" class="section level1">
 <h1>Podsumowanie</h1>
-<p>Na podstawie liniowej korelacji Pearsona, spośród zgromadzonych czynników jako najistotniejsze wybraliśmy następujące: gęstość zaludnienia, urbanizację, wiek, poziom spożycia alkoholu wśród kobiet oraz liczbę osób zarejestrowanych w poradniach psychologicznych. Przetestowanie mocy predykcyjnej modeli wskazało, iż najlepiej radzi sobie gradient boosting z selekcją atrybutów, gradient boosting oraz model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC. W oparciu o analizę błędów, ostatecznie zdecydowaliśmy się na zastosowanie modelu “mieszanego”, który składa się z gradient boosting oraz regresji liniowej.</p>
+<p>Na podstawie testu t oraz liniowej korelacji Pearsona, spośród zgromadzonych czynników jako najistotniejsze wybraliśmy następujące: gęstość zaludnienia, urbanizację, wiek, poziom spożycia alkoholu wśród kobiet oraz liczbę osób zarejestrowanych w poradniach psychologicznych. Przetestowanie mocy predykcyjnej modeli wskazało, iż najlepiej radzi sobie gradient boosting z selekcją atrybutów, gradient boosting oraz model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC. W oparciu o analizę błędów, ostatecznie zdecydowaliśmy się na zastosowanie modelu “mieszanego”, który składa się z gradient boosting oraz regresji liniowej.</p>
 </div>
 
 
