@@ -29,7 +29,7 @@ kable(head(y11[,13:18]))
 
 ## Sposób predykcji
 
-Zdoloność predykcyjną modeli zbadaliśmy estymując model na podstawie danych z **2011** roku, a następnie porównujac predykcję modelu na **2012** roku z rzeczywistymi wartościami.Optymalne paremetry dobieraliśmy za pomocą przeszukiwania parametrów i ewaluacji modelu za pomocą 10-krotnej kroswalidacji. Za kryterium obraliśmy błąd RMSE. Wyniki we wszystkich tabelach zostały pomnożone przez 10^5.
+Zdoloność predykcyjną modeli zbadaliśmy estymując model na podstawie danych z **2011** roku, a następnie porównujac predykcję modelu na **2012** roku z rzeczywistymi wartościami.Optymalne paremetry dobieraliśmy za pomocą przeszukiwania parametrów i ewaluacji modelu za pomocą 10-krotnej kroswalidacji. Za kryterium obraliśmy błąd RMSE. Wyniki we wszystkich tabelach zostały pomnożone przez 10<sup>5</sup>.
 
 ```{r include=FALSE}
 mse <- function(pred, y) {
@@ -45,6 +45,9 @@ Użyliśmy następujących metod:
 <ul>
 <li> regresja liniowa </li>
 <li> gradient boosting </li> 
+<li> SVM </li>
+<li> random forest </li>
+<li> knn </li>
 </ul>
 
 Jak się poniżej okaże, najlepiej sprawdziły się **regresja liniowa z zestawem zmiennych wybranych na podstawie kryterium BIC** oraz **gradient boosting z selekcją atrybutów**. Wybór najlepszych modeli przedstawiamy poniżej.
@@ -219,7 +222,7 @@ kable(res)
 Ostateczne wyniki przedstawia tabela:
 
 ```{r, echo=FALSE}
-head(res)
+kable(head(res))
 ```
 
 Ostatecznie, przetestowanie mocy predykcyjnej modeli na danych z 2012 roku wskazało, iż najlepiej radzi sobie **model liniowy z zestawem zmiennych wybranych na podstawie kryterium BIC**.  
@@ -261,7 +264,7 @@ load(file="rfFit.Rdata")
 load(file="knn_data.Rdata")
 res <- data.frame(matrix(ncol=2, nrow=5))
 colnames(res) <- c("model", "wyniki")
-res$model <- c("gbm z selekcją", "gbm", "knn", "random forest", "svm")
+res$model <- c("boosting z selekcją", "boosting", "knn", "random forest", "svm")
 res$wyniki <- c(rmse(y2[,17], predict(gbmFitSel, y2[,-17]))*10^5, 
                 rmse(y2[,17], predict(gbmFit, y2[,-17]))*10^5,
                 rmse(knn.data[,17], predict(knnFit, knn.data[,-17]))*10^5,
