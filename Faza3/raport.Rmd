@@ -282,6 +282,11 @@ Opis wybranego modelu:
 </ul>
 
 ```{r, eval=FALSE}
+y12.ok$dif_sign <- sign(y12.ok$difs)
+
+y12.ok %>% group_by( TERYT4 ) %>% 
+  summarise( difs = mean(difs), bool_difs = mean(dif_sign), ers = mean(errors),  ers_lin=mean(errors_lin)) -> teryt.groups
+
 teryt.groups$is_linear <- teryt.groups$bool_difs < 0 & teryt.groups$difs < -1e-05 
 teryt.groups$is_boost <- teryt.groups$bool_difs > 0 & teryt.groups$difs > 1e-05 
 teryt.groups$clf <- teryt.groups$is_linear * 1 + teryt.groups$is_boost * -1
